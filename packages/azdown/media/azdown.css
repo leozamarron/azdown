@@ -1,0 +1,10 @@
+/*
+ * Azure DevOps Wiki styling for the built-in Markdown preview.
+ *
+ * TODO(styling-pass): deliberately empty for now. Styling is a separate pass
+ * from syntax; this file exists so the `markdown.previewStyles` contribution
+ * resolves to a real asset instead of 404-ing in the preview webview.
+ *
+ * It must stay theme-aware: the preview renders inside VS Code's own theme,
+ * so colours belong on the --vscode-* custom properties rather than hardcoded.
+ */

@@ -1,0 +1,117 @@
+{
+  "name": "azdown",
+  "displayName": "azdown",
+  "description": "Renders Markdown in VS Code exactly like Azure DevOps Wiki does — syntax and styling.",
+  "version": "0.0.1",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0",
+    "node": ">=24"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "./media/azdown.css"
+    ],
+    "markdown.previewScripts": [
+      "./media/mermaid-init.js"
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "azdown",
+          "title": "Azure DevOps Wiki",
+          "icon": "media/wiki.svg"
+        }
+      ]
+    },
+    "views": {
+      "azdown": [
+        {
+          "id": "azdown.pages",
+          "name": "Pages"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "azdown.pages",
+        "contents": "No Azure DevOps wiki found in this workspace.\n\nazdown looks for a folder containing a .order file. You can also pick one yourself.\n\n[Choose wiki folder](command:azdown.chooseWikiRoot)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "azdown.chooseWikiRoot",
+        "title": "Choose Wiki Folder",
+        "category": "azdown",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "azdown.refresh",
+        "title": "Refresh Wiki Tree",
+        "category": "azdown",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "azdown.chooseWikiRoot",
+          "when": "view == azdown.pages",
+          "group": "navigation@1"
+        },
+        {
+          "command": "azdown.refresh",
+          "when": "view == azdown.pages",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "azdown",
+      "properties": {
+        "azdown.wikiRoot": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Folder to treat as the Azure DevOps wiki root. Absolute, or relative to the first workspace folder. Leave empty to autodetect by looking for the shallowest folder containing a `.order` file."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "1.75.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.x",
+    "typescript-eslint": "^8.61.1",
+    "eslint": "^10.5.0",
+    "esbuild": "^0.28.1",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^6.0.3",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "@types/markdown-it": "^14.1.2"
+  },
+  "dependencies": {
+    "markdown-it-azdown": "*"
+  }
+}

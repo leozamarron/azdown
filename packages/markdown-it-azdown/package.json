@@ -1,0 +1,36 @@
+{
+  "name": "markdown-it-azdown",
+  "version": "0.0.1",
+  "description": "markdown-it plugin that renders Markdown the way Azure DevOps Wiki does.",
+  "license": "MIT",
+  "keywords": [
+    "markdown-it",
+    "markdown-it-plugin",
+    "azure-devops",
+    "wiki",
+    "markdown"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "node --test \"test/**/*.test.js\"",
+    "pretest": "npm run compile"
+  },
+  "peerDependencies": {
+    "markdown-it": ">=12"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "markdown-it": "^14.1.0",
+    "typescript": "^6.0.3",
+    "eslint": "^10.5.0",
+    "typescript-eslint": "^8.61.1",
+    "@types/node": "24.x"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "azdown-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Monorepo for azdown: the markdown-it plugin and the VS Code extension.",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "compile": "npm run compile --workspace packages/markdown-it-azdown && npm run compile --workspace packages/azdown",
+    "watch": "npm run watch --workspace packages/azdown",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspace packages/markdown-it-azdown",
+    "check-types": "npm run check-types --workspaces --if-present",
+    "test:vscode": "npm run test --workspace packages/azdown"
+  },
+  "overrides": {
+    "diff": "^8.0.4",
+    "serialize-javascript": "^7.0.6"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

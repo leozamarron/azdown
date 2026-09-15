@@ -1,0 +1,27 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}/packages/azdown",
+				// Open the dev host ON a folder. Without this it starts with no
+				// workspace at all, which breaks wiki-root autodetection
+				// (workspace.findFiles has nothing to search) and used to make the
+				// "choose wiki folder" command fail outright, because workspace
+				// settings cannot be written in a window with no folder open.
+				"${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/packages/azdown/dist/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		}
+	]
+}
