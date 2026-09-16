@@ -147,7 +147,11 @@ Escape con barra invertida — deben verse los dos puntos, no el emoji:
 
 ---
 
-## 6. Enlaces relativos de wiki — PENDIENTE
+## 6. Enlaces relativos de wiki — IMPLEMENTADO
+
+Ojo: este archivo **no** está dentro de un wiki, así que ninguno resuelve y
+todos deben quedar tal cual se escribieron. Para verlos funcionar, abre
+`sample/wiki/Onboarding.md`, que sí tiene raíz.
 
 - [Página hermana](./Otra-Pagina)
 - [Con guion escapado](./Build%2DAnd%2DRelease)

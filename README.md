@@ -23,11 +23,9 @@ already on your disk.
 | `[[_TOSP_]]` | Implemented — lists real subpages once a wiki root is known |
 | `/.attachments/` images | Implemented — resolved against the wiki root |
 | Wiki tree panel | Implemented — activity bar view, `.order` aware, with authoring actions |
-| Heading anchors | Implemented; slug algorithm **unverified** against a live wiki |
-| KaTeX | TODO |
+| Heading anchors | Implemented — matches Microsoft's documented algorithm and its published example |
 | `:shortcode:` emoji | Implemented |
 | KaTeX | Implemented — inline and block |
-| `:shortcode:` emoji | TODO |
 | Relative wiki links (`%2D` escaping) | Implemented |
 | `#123` / `!456` ref chips | Not implemented — see the extension README |
 | Azure DevOps styling | Implemented — theme-aware, light and dark |
