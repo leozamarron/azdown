@@ -61,8 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Known limitations
 
-- KaTeX, `:shortcode:` emoji, `#123` / `!456` reference chips and relative wiki
-  links are not implemented.
+- Page-name completion and broken-link warnings while editing are not
+  implemented.
 - Heading anchors follow Microsoft's documented algorithm and its published
   example. Cases the documentation does not specify — non-Latin scripts, emoji,
   trailing punctuation — remain unverified.
