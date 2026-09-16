@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"target": "ES2022",
+		// The webview is a browser: it has the DOM and it does not have Node.
+		// Keeping this separate from the extension host's tsconfig is what stops
+		// DOM globals leaking into extension code, and Node globals into the
+		// preview script.
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"types": [],
+		"strict": true,
+		"noEmit": true,
+		"skipLibCheck": true
+	},
+	"include": ["src/preview/**/*.ts"]
+}

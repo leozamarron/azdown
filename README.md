@@ -23,7 +23,7 @@ root is not cosmetic: it is the context that makes `[[_TOSP_]]` and
 
 | Feature | Status |
 | --- | --- |
-| `::: mermaid` / `::: video` / `::: math` containers | Implemented (Mermaid not yet drawn client-side) |
+| `::: mermaid` / `::: video` / `::: math` containers | Implemented, Mermaid diagrams rendered |
 | `[[_TOC_]]` | Implemented |
 | `[[_TOSP_]]` | Implemented — lists real subpages once a wiki root is known |
 | `/.attachments/` images | Implemented — resolved against the wiki root |

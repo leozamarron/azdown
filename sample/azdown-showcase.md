@@ -18,8 +18,27 @@ graph LR
   B -->|falla| D[Rechazo]
 :::
 
-El diagrama **todavía no se dibuja**: el plugin emite `<div class="mermaid">`
-pero falta cargar Mermaid en el webview. Debes ver el código fuente en un div.
+El diagrama **debe dibujarse**. Cambia el tema de VS Code (claro/oscuro) y
+debe volver a dibujarse solo, con los colores del tema nuevo.
+
+Segundo diagrama, para comprobar que se renderizan varios:
+
+::: mermaid
+sequenceDiagram
+  Dev->>CI: push
+  CI->>Marketplace: publish
+  Marketplace-->>Dev: v0.1.0
+:::
+
+### Diagrama inválido
+
+Debe mostrar el error de Mermaid **en su caja**, y los diagramas de arriba
+deben seguir dibujados. Si un diagrama roto tumba a los demás, hay un bug:
+
+::: mermaid
+graph LR
+  A --> --> B[[[
+:::
 
 ### Un code fence NO es un container
 

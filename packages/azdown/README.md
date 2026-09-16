@@ -14,9 +14,11 @@ locally, not resolved.
 
 ### Azure DevOps syntax
 
-- **`::: mermaid`, `::: video`, `::: math` containers** — the three-colon form
-  Azure DevOps uses. A ```` ```mermaid ```` code fence stays a code block, just
-  like in the real wiki.
+- **`::: mermaid` diagrams, rendered** — the three-colon form Azure DevOps
+  uses, drawn in the preview and re-themed when you switch between light and
+  dark. A ```` ```mermaid ```` code fence stays a code block, just like in the
+  real wiki.
+- **`::: video` and `::: math` containers.**
 - **`[[_TOC_]]`** — table of contents, nested by heading level.
 - **`[[_TOSP_]]`** — table of subpages, listing the real child pages.
 - **Heading anchors** using Azure DevOps's slug algorithm.
@@ -46,8 +48,6 @@ Being honest about scope:
 - `#123` / `!456` reference chips
 - Relative links between wiki pages
 - Azure DevOps visual styling
-
-Mermaid containers are parsed and emitted, but the diagram is not drawn yet.
 
 ## Settings
 
