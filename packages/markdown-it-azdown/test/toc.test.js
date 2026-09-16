@@ -96,3 +96,49 @@ test('headings inside a TOC label are escaped', () => {
 	const html = render('[[_TOC_]]\n\n# A `<b>` B\n');
 	assert.match(html, /&lt;b&gt;/);
 });
+
+/*
+ * Behaviours taken from Microsoft's documentation rather than inferred.
+ * https://learn.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance
+ */
+
+test('the TOC is titled "Contents", as documented', () => {
+	const html = render('[[_TOC_]]\n\n# Uno\n');
+	assert.match(html, /azdown-toc-title">Contents</);
+});
+
+test('only the first [[_TOC_]] on a page renders', () => {
+	// "The publishing system renders the TOC for the first instance of the
+	// [[_TOC_]] tag ... It ignores other instances of the tag on the same page."
+	const html = render('[[_TOC_]]\n\n# Uno\n\n[[_TOC_]]\n');
+	assert.equal((html.match(/azdown-toc"/g) ?? []).length, 1);
+});
+
+test('only the first [[_TOSP_]] on a page renders', () => {
+	const html = render('[[_TOSP_]]\n\n[[_TOSP_]]\n');
+	assert.equal((html.match(/azdown-tosp"/g) ?? []).length, 1);
+});
+
+test('the TOC ignores HTML-style headings', () => {
+	// "The system confirms only Markdown style headings identified by the hash
+	// mark # syntax. It ignores HTML style heading tags."
+	const md = new MarkdownIt({ html: true }).use(azdown);
+	const html = md.render('[[_TOC_]]\n\n<h1>Oculto</h1>\n\n# Visible\n');
+	const nav = html.match(/<nav class="azdown-toc">[\s\S]*?<\/nav>/)[0];
+	assert.doesNotMatch(nav, /Oculto/);
+	assert.match(nav, /Visible/);
+});
+
+test('the TOC entry uses heading text only, dropping inline markup', () => {
+	// "The system uses only the heading text to create the TOC entry. It
+	// ignores all extra HTML and Markdown syntax."
+	const html = render('[[_TOC_]]\n\n# El *Flagship* producto\n');
+	assert.match(html, />El Flagship producto</);
+});
+
+test('anchors follow the documented example end to end', () => {
+	// #### Team #1 : Release Wiki!  ->  #team-1--release-wiki
+	const html = render('[[_TOC_]]\n\n#### Team #1 : Release Wiki!\n');
+	assert.match(html, /<a href="#team-1--release-wiki">/);
+	assert.match(html, /<a class="azdown-anchor" id="team-1--release-wiki"><\/a>/);
+});

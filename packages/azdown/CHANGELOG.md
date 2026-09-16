@@ -35,8 +35,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Open previews re-render when the wiki root changes or a page is added or
   removed, instead of showing stale output until the document is edited.
 
+### Fixed
+
+- Heading anchors no longer collapse consecutive hyphens. Microsoft's
+  documented example (`Team #1 : Release Wiki!` → `#team-1--release-wiki`)
+  keeps the double hyphen, so collapsing it broke anchors for any heading with
+  punctuation between two spaces.
+
 ### Known limitations
 
 - KaTeX, `:shortcode:` emoji, `#123` / `!456` reference chips and relative wiki
   links are not implemented.
-- The heading slug algorithm is not yet verified against a live wiki.
+- Heading anchors follow Microsoft's documented algorithm and its published
+  example. Cases the documentation does not specify — non-Latin scripts, emoji,
+  trailing punctuation — remain unverified.
+- `::: math` is not documented Azure DevOps syntax; `$…$` and `$$…$$` are, and
+  are not implemented yet.

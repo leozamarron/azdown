@@ -11,6 +11,9 @@ export interface HeadingEntry {
 /** Per-render state the plugin hangs off markdown-it's `env`. */
 export interface AzdownEnv {
 	headings?: HeadingEntry[];
+	/** Azure DevOps renders only the first [[_TOC_]] / [[_TOSP_]] on a page. */
+	tocRendered?: boolean;
+	tospRendered?: boolean;
 }
 
 export function azdownEnv(env: unknown): AzdownEnv {

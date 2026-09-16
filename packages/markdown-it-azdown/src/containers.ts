@@ -1,7 +1,18 @@
 import type MarkdownIt from 'markdown-it';
 import type { StateBlock, RuleBlock, RenderRule } from './types.js';
 
-/** Container kinds Azure DevOps documents. Anything else is left as prose. */
+/*
+ * Container kinds. Anything else is left as prose.
+ *
+ * `mermaid` and `video` are documented Azure DevOps syntax. `math` is NOT:
+ * Microsoft documents mathematical notation as `$...$` inline and `$$...$$`
+ * block, and its own FAQ mentions a ```math fenced block -- the two disagree
+ * with each other, and neither is a three-colon container. `::: math` is kept
+ * because it was asked for and may exist undocumented, but treat it as
+ * speculative until someone confirms it on a real wiki.
+ *
+ * https://learn.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance
+ */
 const KINDS = ['mermaid', 'video', 'math'] as const;
 type Kind = (typeof KINDS)[number];
 

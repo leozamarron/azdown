@@ -2,20 +2,45 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { slugify, SlugBuilder } = require('../dist/index.js');
 
-test('lowercases and joins words with dashes', () => {
+/*
+ * The one case Microsoft publishes a worked answer for. Everything else in
+ * this file is either a direct consequence of it, or a `todo` below.
+ *
+ *   #### Team #1 : Release Wiki!
+ *   [Visit the Project Wiki](#team-1--release-wiki)
+ *
+ * https://learn.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance
+ */
+test("matches Microsoft's documented example exactly", () => {
+	assert.equal(slugify('Team #1 : Release Wiki!'), 'team-1--release-wiki');
+});
+
+test('the double hyphen in the documented example is not collapsed', () => {
+	// Guards the specific regression: a "tidy up consecutive hyphens" step
+	// looks harmless and silently breaks every anchor containing punctuation
+	// between two spaces.
+	assert.match(slugify('Team #1 : Release Wiki!'), /1--release/);
+});
+
+test('lowercases and joins words with hyphens', () => {
 	assert.equal(slugify('Hello World'), 'hello-world');
 });
 
-test('collapses whitespace runs into a single dash', () => {
-	assert.equal(slugify('Hello    World'), 'hello-world');
-	assert.equal(slugify('Hello\tWorld'), 'hello-world');
+test('punctuation is removed rather than turned into a hyphen', () => {
+	// The docs claim conversion; the documented example proves removal.
+	assert.equal(slugify('Release Wiki!'), 'release-wiki');
+	assert.equal(slugify('What? Why!'), 'what-why');
+});
+
+test('each space contributes its own hyphen', () => {
+	assert.equal(slugify('a  b'), 'a--b');
 });
 
 test('trims surrounding whitespace', () => {
 	assert.equal(slugify('  Hello World  '), 'hello-world');
 });
 
-test('keeps existing dashes and underscores', () => {
+test('keeps existing hyphens and underscores', () => {
 	assert.equal(slugify('build-and_release'), 'build-and_release');
 });
 
@@ -32,41 +57,39 @@ test('de-duplication is per builder, not global', () => {
 });
 
 /*
- * Everything below is UNVERIFIED against a real Azure DevOps wiki.
+ * Still unverified. The documentation's single example does not reach these,
+ * and its prose ("remove or convert other special characters according to the
+ * rendering engine's rules") explicitly declines to specify them.
  *
- * These are deliberately `todo` rather than asserted: the current
- * implementation produces *some* answer for each, but we have no evidence it
- * is Azure DevOps's answer, and a passing test would launder a guess into a
- * documented guarantee. Fill them in once someone can diff against a live
- * page -- that is the fidelity work item, and these are its checklist.
+ * These stay `todo` on purpose: an earlier version of this file asserted that
+ * trailing hyphens are trimmed and consecutive ones collapsed, described it as
+ * a "safe normalisation", and it turned out to contradict the documented
+ * example. Assertions here need evidence, not plausibility.
+ *
+ * To close one: put the heading on a real Azure DevOps wiki page, inspect the
+ * rendered heading's id, and turn the todo into an assertion.
  */
-test('punctuation handling matches Azure DevOps', { todo: 'verify against a live wiki' }, () => {
-	// e.g. is "C# Guide" -> "c-guide", "c39-guide", or "c%23-guide"?
-	assert.equal(slugify('C# Guide'), 'c-guide');
+test('a trailing hyphen from stripped punctuation', { todo: 'verify against a live wiki' }, () => {
+	// Does Azure DevOps keep "c-guide-" or trim it to "c-guide"?
+	assert.equal(slugify('C# Guide !'), 'c-guide');
 });
 
-test('non-Latin headings match Azure DevOps', { todo: 'verify against a live wiki' }, () => {
-	// Azure DevOps may percent-encode rather than preserve these.
+test('non-Latin headings', { todo: 'verify against a live wiki' }, () => {
+	// Azure DevOps may percent-encode these rather than preserve them.
 	assert.equal(slugify('Configuración'), 'configuración');
 });
 
-test('headings starting with a digit match Azure DevOps', { todo: 'verify against a live wiki' }, () => {
+test('headings starting with a digit', { todo: 'verify against a live wiki' }, () => {
 	assert.equal(slugify('1. Setup'), '1-setup');
 });
 
-test('emoji in headings match Azure DevOps', { todo: 'verify against a live wiki' }, () => {
+test('emoji in headings', { todo: 'verify against a live wiki' }, () => {
 	assert.equal(slugify('Done ✅'), 'done');
 });
 
-test('never emits a leading or trailing dash', () => {
-	// Structural invariant, independent of how punctuation itself is treated.
-	for (const input of ['C# Guide !', '!!! Hola !!!', '- guion -', '   ']) {
-		const slug = slugify(input);
-		assert.doesNotMatch(slug, /^-/, `leading dash for ${JSON.stringify(input)}`);
-		assert.doesNotMatch(slug, /-$/, `trailing dash for ${JSON.stringify(input)}`);
-	}
-});
-
-test('never emits consecutive dashes', () => {
-	assert.doesNotMatch(slugify('Uno !! Dos'), /--/);
+test('the de-duplication suffix format', { todo: 'verify against a live wiki' }, () => {
+	// Azure DevOps de-duplicates, but "-1" is an assumption.
+	const slugs = new SlugBuilder();
+	slugs.next('Overview');
+	assert.equal(slugs.next('Overview'), 'overview-1');
 });

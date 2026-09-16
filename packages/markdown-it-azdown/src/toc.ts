@@ -11,6 +11,18 @@ const TOSP = '[[_TOSP_]]';
 const MIN_LEVEL = 1;
 const MAX_LEVEL = 6;
 
+/*
+ * Azure DevOps titles these tables, and the titles are documented verbatim:
+ * "The TOC title on the page is 'Contents'" and "The title of the table on the
+ * page is 'Child Pages'".
+ *
+ * Rendered as a <p>, not a heading: a heading here would join the document
+ * outline and feed itself back into the very table it labels. The element is
+ * our choice; the wording is not.
+ */
+const TOC_TITLE = 'Contents';
+const TOSP_TITLE = 'Child Pages';
+
 function escapeHtml(s: string): string {
 	return s
 		.replace(/&/g, '&amp;')
@@ -89,8 +101,10 @@ function renderEntries(all: HeadingEntry[]): string {
 		return '<nav class="azdown-toc"></nav>\n';
 	}
 
+	const title = `<p class="azdown-toc-title">${TOC_TITLE}</p>\n`;
+
 	const base = Math.min(...entries.map((e) => e.level));
-	let out = '<nav class="azdown-toc">\n<ul>\n';
+	let out = `<nav class="azdown-toc">\n${title}<ul>\n`;
 	let current = base;
 
 	for (const entry of entries) {
@@ -131,7 +145,7 @@ function renderSubpages(env: unknown, wiki: WikiProvider | undefined): string {
 		return '<nav class="azdown-tosp" data-azdown-pending="subpages"></nav>\n';
 	}
 
-	let out = '<nav class="azdown-tosp">\n<ul>\n';
+	let out = `<nav class="azdown-tosp">\n<p class="azdown-tosp-title">${TOSP_TITLE}</p>\n<ul>\n`;
 	for (const entry of entries) {
 		out += `<li><a href="${escapeHtml(entry.href)}">${escapeHtml(entry.title)}</a></li>\n`;
 	}
@@ -147,9 +161,28 @@ export function tocPlugin(md: MarkdownIt, wiki?: WikiProvider): void {
 		{ alt: ['paragraph', 'reference', 'blockquote', 'list'] }
 	);
 
-	md.renderer.rules.azdown_toc = (tokens, _idx, _options, env): string =>
-		renderEntries(azdownEnv(env).headings ?? scanHeadings(tokens as Token[]));
+	/*
+	 * Only the first instance of each macro renders; later ones are dropped.
+	 * Documented for both tags: "The publishing system renders the TOC for the
+	 * first instance ... It ignores other instances of the tag on the same
+	 * page." Rendering runs in document order, so the first token reached is
+	 * the first in the page.
+	 */
+	md.renderer.rules.azdown_toc = (tokens, _idx, _options, env): string => {
+		const state = azdownEnv(env);
+		if (state.tocRendered) {
+			return '';
+		}
+		state.tocRendered = true;
+		return renderEntries(state.headings ?? scanHeadings(tokens as Token[]));
+	};
 
-	md.renderer.rules.azdown_tosp = (_tokens, _idx, _options, env): string =>
-		renderSubpages(env, wiki);
+	md.renderer.rules.azdown_tosp = (_tokens, _idx, _options, env): string => {
+		const state = azdownEnv(env);
+		if (state.tospRendered) {
+			return '';
+		}
+		state.tospRendered = true;
+		return renderSubpages(env, wiki);
+	};
 }
