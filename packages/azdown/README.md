@@ -44,6 +44,9 @@ file cannot express:
   them: `Build-And-Release.md` shows as "Build And Release", and `%2D` stays a
   literal dash.
 - **`.order` is respected**, so the tree matches your wiki's real page order.
+- **The tree is for writing, not just reading.** The page you are editing stays
+  highlighted, and each page offers edit, preview to the side, copy wiki link,
+  and new subpage — which creates the file and registers it in `.order` for you.
 
 The wiki root is detected automatically from `.order` files. Override it with
 `azdown.wikiRoot` or the folder picker in the panel.

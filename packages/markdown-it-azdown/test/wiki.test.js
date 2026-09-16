@@ -31,3 +31,36 @@ test('relative paths stay local for siblings', () => {
 test('relative paths climb multiple levels', () => {
 	assert.equal(relativePath('/wiki/a/b/c', '/wiki/.attachments/x.png'), '../../../.attachments/x.png');
 });
+
+const { pageFileName } = require('../dist/index.js');
+
+test('titles become Azure DevOps page file names', () => {
+	assert.equal(pageFileName('Build And Release'), 'Build-And-Release');
+});
+
+test('a literal dash in a title is escaped as %2D', () => {
+	assert.equal(pageFileName('Azure-DevOps Notas'), 'Azure%2DDevOps-Notas');
+});
+
+test('title and file name round-trip in both directions', () => {
+	// The property that matters: escaping a dash must survive turning spaces
+	// into dashes, or two different pages collapse into one name.
+	for (const title of [
+		'Onboarding',
+		'Build And Release',
+		'Azure-DevOps Notas',
+		'A-B',
+		'A B',
+		'Guia rapida de CI-CD'
+	]) {
+		assert.equal(pageTitle(pageFileName(title)), title, `round-trip failed for ${title}`);
+	}
+});
+
+test('surrounding whitespace is trimmed, not encoded', () => {
+	assert.equal(pageFileName('  Onboarding  '), 'Onboarding');
+});
+
+test('runs of spaces collapse to a single dash', () => {
+	assert.equal(pageFileName('Guia    rapida'), 'Guia-rapida');
+});

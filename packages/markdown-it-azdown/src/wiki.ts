@@ -61,3 +61,15 @@ export function pageTitle(fileName: string): string {
 			.join('-')
 	);
 }
+
+/**
+ * Turns a display title back into an Azure DevOps page file name.
+ *
+ * The exact inverse of {@link pageTitle}, and the order matters: a literal
+ * dash has to become `%2D` *before* spaces become dashes, or the two become
+ * indistinguishable and "Azure-DevOps Notas" would round-trip to
+ * "Azure DevOps Notas" -- a different page.
+ */
+export function pageFileName(title: string): string {
+	return title.trim().replace(/-/g, '%2D').replace(/\s+/g, '-');
+}

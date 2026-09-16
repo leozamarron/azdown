@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import type MarkdownIt from 'markdown-it';
 import { azdown } from 'markdown-it-azdown';
-import { WikiRoot } from './wiki.js';
-import { WikiTreeProvider } from './tree.js';
+import * as path from 'node:path';
+import { WikiRoot, createPage, wikiPathOf } from './wiki.js';
+import { WikiTreeProvider, type PageItem } from './tree.js';
 
 /**
  * The extension opens no preview of its own: it extends VS Code's built-in one
@@ -17,6 +18,32 @@ export function activate(context: vscode.ExtensionContext) {
 	const log = vscode.window.createOutputChannel('azdown');
 	const wiki = new WikiRoot(log);
 	const tree = new WikiTreeProvider(wiki);
+	const view = vscode.window.createTreeView('azdown.pages', {
+		treeDataProvider: tree,
+		showCollapseAll: true
+	});
+
+	/**
+	 * Selects the page the user is editing.
+	 *
+	 * Without this the tree shows no relationship to the editor, which is the
+	 * difference between a navigation aid and a list of files.
+	 */
+	const revealActive = async (): Promise<void> => {
+		const file = vscode.window.activeTextEditor?.document.uri.fsPath;
+		if (!file?.toLowerCase().endsWith('.md') || !view.visible) {
+			return;
+		}
+		const item = await tree.find(file);
+		if (item) {
+			// `select` without `focus`: highlight the page, but never steal the
+			// cursor away from the editor the user is typing in.
+			await view.reveal(item, { select: true, focus: false, expand: true });
+		}
+	};
+
+	/** The folder holding a page's children, creating nothing on disk yet. */
+	const childrenDirOf = (item: PageItem): string => item.file.replace(/\.md$/i, '');
 
 	/**
 	 * Commands must never reject silently.
@@ -51,10 +78,38 @@ export function activate(context: vscode.ExtensionContext) {
 		void vscode.commands.executeCommand('markdown.preview.refresh');
 	};
 
+	/** Shared by "New Page" (view title) and "New Subpage" (context menu). */
+	async function newPage(item?: PageItem): Promise<void> {
+		const root = wiki.root();
+		if (!root) {
+			throw new Error('set a wiki root before creating pages');
+		}
+		// From the view title there is no item: create at the wiki root.
+		const parentDir = item ? childrenDirOf(item) : root;
+		const where = item ? `under "${String(item.label)}"` : 'at the wiki root';
+
+		const title = await vscode.window.showInputBox({
+			title: `New page ${where}`,
+			prompt: 'Page title, written the way it should appear in the wiki',
+			validateInput: (value) => (value.trim() === '' ? 'A page needs a title' : undefined)
+		});
+		if (title === undefined) {
+			return;
+		}
+
+		const file = createPage(parentDir, title);
+		log.appendLine(`[newPage] ${file}`);
+
+		await wiki.detect();
+		tree.refresh();
+		// Open it for editing: the point of creating a page is writing it.
+		await vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false });
+	}
+
 	context.subscriptions.push(
 		log,
 		wiki,
-		vscode.window.registerTreeDataProvider('azdown.pages', tree),
+		view,
 		wiki.onDidChange(() => {
 			tree.refresh();
 			refreshPreviews();
@@ -96,6 +151,37 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}),
 
+		command('azdown.edit', async (item?: PageItem) => {
+			const target = item?.resourceUri;
+			if (target) {
+				await vscode.window.showTextDocument(target, { preview: false });
+			}
+		}),
+
+		command('azdown.openToSide', async (item?: PageItem) => {
+			if (item?.resourceUri) {
+				await vscode.commands.executeCommand('markdown.showPreviewToSide', item.resourceUri);
+			}
+		}),
+
+		command('azdown.copyLink', async (item?: PageItem) => {
+			const root = wiki.root();
+			if (!item || !root) {
+				throw new Error('no wiki root is set, so there is no wiki path to copy');
+			}
+			// The Azure DevOps form -- root-absolute, no .md -- so it can be
+			// pasted straight into another wiki page.
+			const link = wikiPathOf(root, item.file);
+			await vscode.env.clipboard.writeText(link);
+			void vscode.window.showInformationMessage(`Copied ${link}`);
+		}),
+
+		command('azdown.newPage', (item?: PageItem) => newPage(item)),
+		command('azdown.newSubpage', (item?: PageItem) => newPage(item)),
+
+		vscode.window.onDidChangeActiveTextEditor(() => void revealActive()),
+		view.onDidChangeVisibility(() => void revealActive()),
+
 		vscode.workspace.onDidChangeConfiguration(async (e) => {
 			if (e.affectsConfiguration('azdown.wikiRoot')) {
 				await wiki.detect();
@@ -127,7 +213,7 @@ export function activate(context: vscode.ExtensionContext) {
 		watcher.onDidChange(() => tree.refresh())
 	);
 
-	void wiki.detect();
+	void wiki.detect().then(() => revealActive());
 
 	return {
 		extendMarkdownIt(md: MarkdownIt): MarkdownIt {

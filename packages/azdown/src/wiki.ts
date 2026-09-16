@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { pageTitle, type SubpageEntry, type WikiProvider } from 'markdown-it-azdown';
+import { pageTitle, pageFileName, type SubpageEntry, type WikiProvider } from 'markdown-it-azdown';
 
 /**
  * Azure DevOps wiki repositories carry a `.order` file in every directory that
@@ -18,6 +18,66 @@ export interface WikiPage {
 	title: string;
 	/** Absolute path of the folder holding this page's children, if any. */
 	childrenDir: string | undefined;
+}
+
+/**
+ * The Azure DevOps wiki path for a page, as it would be written in a link.
+ *
+ * Root-absolute and without the `.md`, matching how Azure DevOps writes links
+ * between pages. `%2D` stays escaped because it is part of the page name.
+ */
+export function wikiPathOf(root: string, file: string): string {
+	const rel = path.relative(root, file).replace(/\.md$/i, '');
+	return `/${rel.split(path.sep).join('/')}`;
+}
+
+/**
+ * Creates a new page and registers it in its folder's `.order`.
+ *
+ * Refuses to touch an existing file: this is the one place the extension
+ * writes into the user's wiki, and silently overwriting a page would be the
+ * worst possible bug to ship.
+ *
+ * Returns the path of the created file.
+ */
+export function createPage(parentDir: string, title: string): string {
+	const name = pageFileName(title);
+	if (name === '' || name.includes('/') || name.includes('\\') || name.startsWith('.')) {
+		throw new Error(`not a usable page name: "${title}"`);
+	}
+
+	const file = path.join(parentDir, `${name}.md`);
+	if (fs.existsSync(file)) {
+		throw new Error(`a page called "${pageTitle(name)}" already exists here`);
+	}
+
+	fs.mkdirSync(parentDir, { recursive: true });
+	fs.writeFileSync(file, `# ${title}\n`, 'utf8');
+	addToOrder(parentDir, name);
+	return file;
+}
+
+/**
+ * Appends a page to `.order`, leaving the existing contents untouched.
+ *
+ * A missing `.order` is created; a file without a trailing newline gets one,
+ * so the new entry does not end up glued to the last page name.
+ */
+function addToOrder(dir: string, name: string): void {
+	const orderFile = path.join(dir, ORDER_FILE);
+	let existing = '';
+	try {
+		existing = fs.readFileSync(orderFile, 'utf8');
+	} catch {
+		// No .order yet: this page becomes its first entry.
+	}
+
+	if (readOrder(dir).includes(name)) {
+		return;
+	}
+
+	const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
+	fs.appendFileSync(orderFile, `${separator}${name}\n`, 'utf8');
 }
 
 /** Reads a `.order` file, returning page names in order. Missing file -> []. */

@@ -13,7 +13,7 @@ export { anchorsPlugin } from './anchors.js';
 export { imagesPlugin } from './images.js';
 export { linksPlugin } from './links.js';
 export { relativePath, dirname, documentPath } from './paths.js';
-export { pageTitle, ATTACHMENTS_PREFIX } from './wiki.js';
+export { pageTitle, pageFileName, ATTACHMENTS_PREFIX } from './wiki.js';
 export type { WikiProvider, SubpageEntry } from './wiki.js';
 
 /**
