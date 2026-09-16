@@ -1,5 +1,5 @@
 import type MarkdownIt from 'markdown-it';
-import type { Token } from './types.js';
+import { onBeforeRender, walkTokens, originalAttr, attrDelete } from './prerender.js';
 import { ATTACHMENTS_PREFIX, type WikiProvider } from './wiki.js';
 import { documentPath, dirname, relativePath } from './paths.js';
 
@@ -11,37 +11,35 @@ import { documentPath, dirname, relativePath } from './paths.js';
  * against the workspace folder instead, so the image 404s unless the wiki
  * happens to be the workspace root -- which is the bug users actually hit.
  *
- * !! Why this is a core rule and not a renderer rule !!
- * VS Code wraps `renderer.rules.image` and resolves `src` itself *before*
- * delegating to the previous rule, so a renderer rule of ours would only ever
- * see an already-resolved path. Rewriting during parsing puts our path in
- * place early enough for VS Code's own resolution to do the right thing.
+ * !! Why this runs from onBeforeRender and not a core rule !!
+ * A core rule runs during tokenization, and VS Code tokenizes with an env
+ * whose `currentDocument` is explicitly undefined -- so a core rule cannot
+ * know which file it is rendering, and this rewrite silently did nothing in
+ * the real preview while passing every test. See prerender.ts.
  */
 export function imagesPlugin(md: MarkdownIt, wiki: WikiProvider): void {
-	md.core.ruler.push('azdown_attachments', (state) => {
+	onBeforeRender(md, (tokens, env) => {
 		const root = wiki.root();
-		const docPath = documentPath(state.env);
-		if (!root || !docPath) {
-			return;
-		}
+		const docPath = documentPath(env);
 
-		const walk = (tokens: Token[]): void => {
-			for (const token of tokens) {
-				if (token.children?.length) {
-					walk(token.children);
-				}
-				if (token.type !== 'image') {
-					continue;
-				}
-				const src = token.attrGet('src');
-				if (!src?.startsWith(ATTACHMENTS_PREFIX)) {
-					continue;
-				}
-				const absolute = `${root.replace(/\/+$/, '')}${src}`;
-				token.attrSet('src', relativePath(dirname(docPath), absolute));
+		walkTokens(tokens, (token) => {
+			if (token.type !== 'image') {
+				return;
 			}
-		};
+			const original = originalAttr(token, 'src');
+			if (!original?.startsWith(ATTACHMENTS_PREFIX)) {
+				return;
+			}
+			if (!root || !docPath) {
+				// No wiki context: leave the author's path exactly as written.
+				return;
+			}
 
-		walk(state.tokens);
+			const absolute = `${root.replace(/\/+$/, '')}${original}`;
+			token.attrSet('src', relativePath(dirname(docPath), absolute));
+			// Force VS Code to resolve the new value; it skips any image that
+			// already carries a data-src from a previous render.
+			attrDelete(token, 'data-src');
+		});
 	});
 }

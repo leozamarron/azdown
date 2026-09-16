@@ -47,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Attachment paths and links between pages were never rewritten in the real
+  preview. Both were implemented as markdown-it `core` rules, and VS Code
+  tokenizes with an env whose `currentDocument` is explicitly undefined --
+  the document only reaches the *render* call. The rules therefore found no
+  document and silently did nothing, while the tests, which passed one env to
+  both phases, kept passing. They now run from a render-time pass.
+
 - Heading anchors no longer collapse consecutive hyphens. Microsoft's
   documented example (`Team #1 : Release Wiki!` → `#team-1--release-wiki`)
   keeps the double hyphen, so collapsing it broke anchors for any heading with
