@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Wiki page tree in the activity bar, ordered by `.order` and showing Azure
   DevOps display titles.
 - `azdown.wikiRoot` setting, autodetected from `.order` files.
+- Authoring actions on the wiki tree: edit a page, open its preview to the
+  side, copy its Azure DevOps wiki link, and create pages and subpages. A new
+  page is registered in its folder's `.order`, creating the folder and the file
+  when needed. The page being edited is highlighted in the tree.
 - Azure DevOps styling for the preview: type scale, ruled headings, bordered
   tables, boxed table of contents, and states for unrendered math, empty
   subpage lists and diagrams that failed to parse. Every colour comes from a
