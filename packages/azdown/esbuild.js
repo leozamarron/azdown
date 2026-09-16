@@ -2,7 +2,7 @@ const esbuild = require("esbuild");
 const path = require("node:path");
 const fs = require("node:fs");
 
-// Anclado a __dirname: el build no depende del cwd desde el que se invoque.
+// Anchored to __dirname: the build does not depend on the cwd it is invoked from.
 const pkgRoot = __dirname;
 
 const production = process.argv.includes('--production');

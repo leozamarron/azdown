@@ -1,6 +1,6 @@
 # Build And Release
 
-El archivo se llama `Build-And-Release.md` y en el panel debe verse como
-**Build And Release**, sin guiones — igual que en el wiki real.
+This file is named `Build-And-Release.md`, and the panel should show it as
+**Build And Release** — no hyphens, exactly as the real wiki shows it.
 
-![Diagrama](/.attachments/diagrama.png)
+![Diagram](/.attachments/diagram.png)

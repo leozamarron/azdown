@@ -1,27 +1,27 @@
-# azdown — hoja de pruebas
+# azdown — test sheet
 
-Abre este archivo con `Ctrl+K V` y compáralo contra la misma página en un wiki
-real de Azure DevOps. Cada sección dice si ya está implementada o pendiente.
+Open this file with `Ctrl+K V` and compare it against the same page in a real
+Azure DevOps wiki. Each section says whether the feature is implemented or not.
 
 [[_TOC_]]
 
 ---
 
-## 1. Containers de tres dos puntos — IMPLEMENTADO
+## 1. Three-colon containers — IMPLEMENTED
 
 ### Mermaid
 
 ::: mermaid
 graph LR
   A[Commit] --> B{CI}
-  B -->|pasa| C[Merge]
-  B -->|falla| D[Rechazo]
+  B -->|passes| C[Merge]
+  B -->|fails| D[Rejected]
 :::
 
-El diagrama **debe dibujarse**. Cambia el tema de VS Code (claro/oscuro) y
-debe volver a dibujarse solo, con los colores del tema nuevo.
+The diagram **should be drawn**. Switch the VS Code theme between light and
+dark: it should redraw itself in the new theme's colours.
 
-Segundo diagrama, para comprobar que se renderizan varios:
+A second diagram, to check that several render:
 
 ::: mermaid
 sequenceDiagram
@@ -30,19 +30,19 @@ sequenceDiagram
   Marketplace-->>Dev: v0.1.0
 :::
 
-### Diagrama inválido
+### Invalid diagram
 
-Debe mostrar el error de Mermaid **en su caja**, y los diagramas de arriba
-deben seguir dibujados. Si un diagrama roto tumba a los demás, hay un bug:
+This should show Mermaid's error **inside its own box**, and the diagrams above
+should stay drawn. If one broken diagram takes the others down, that is a bug:
 
 ::: mermaid
 graph LR
   A --> --> B[[[
 :::
 
-### Un code fence NO es un container
+### A code fence is NOT a container
 
-Esto tiene que seguir siendo un bloque de código, no un diagrama:
+This has to stay a code block, not a diagram:
 
 ```mermaid
 graph LR
@@ -61,153 +61,159 @@ graph LR
 \frac{n!}{k!(n-k)!} = \binom{n}{k}
 :::
 
-Pendiente KaTeX: por ahora se ve la fuente dentro de una caja.
+Note that `::: math` is **not** documented Azure DevOps syntax. It is supported
+because it was asked for; prefer `$…$` and `$$…$$`, which are documented.
 
-### Kind desconocido
+### Unknown kind
 
-Esto debe quedar como texto plano, no desaparecer:
+This should stay plain text, not disappear:
 
-::: loquesea
-contenido que no se debe tragar
+::: whatever
+content that must not be swallowed
 :::
 
 ---
 
-## 2. Macros — IMPLEMENTADO
+## 2. Macros — IMPLEMENTED
 
-El `[[_TOC_]]` de arriba debe listar todos estos encabezados y sus enlaces
-deben funcionar al hacer clic.
+The `[[_TOC_]]` above should list every heading on this page, titled
+**Contents**, and its links should jump when clicked.
 
-### Subpáginas
+Only the first `[[_TOC_]]` renders. This second one should produce nothing:
+
+[[_TOC_]]
+
+### Subpages
 
 [[_TOSP_]]
 
-Renderiza un placeholder vacío a propósito: listar subpáginas exige el árbol
-del wiki, que un `.md` suelto no tiene.
+This renders an empty placeholder on purpose: listing subpages needs the wiki
+tree, which a standalone `.md` does not have. Open `sample/wiki/Onboarding.md`
+to see it populated.
 
-### El macro debe estar solo en su línea
+### The macro must own its line
 
-Texto [[_TOC_]] más texto — esto **no** debe generar un índice.
+Text [[_TOC_]] more text — this should **not** produce a table of contents.
 
 ---
 
-## 3. Anclas de encabezado — PARCIAL
+## 3. Heading anchors — IMPLEMENTED
 
-Cada encabezado lleva un `id`. El algoritmo de slug es **best-effort y no está
-verificado** contra Azure DevOps real.
-
-### Overview
+Every heading carries an anchor. The algorithm follows what Microsoft
+documents, including its one published worked example.
 
 ### Overview
 
-Dos encabezados iguales: el segundo debe recibir `overview-1`.
+### Overview
 
-### Título con C# y símbolos raros !@#
-
-### Configuración en español
-
-### 1. Empieza con dígito
-
-Estos cuatro son justo los casos dudosos. Compáralos contra un wiki real.
+Two identical headings: the second should get `overview-1`.
 
 #### Team #1 : Release Wiki!
 
-Este es el **único ejemplo resuelto que publica Microsoft**. El ancla tiene que
-ser exactamente `#team-1--release-wiki`, con el guion doble. Comprueba que este
-enlace salta aquí: [Visit the Project Wiki](#team-1--release-wiki).
+This is the **only worked example Microsoft publishes**. The anchor must be
+exactly `#team-1--release-wiki`, with the double hyphen. Check that this link
+lands here: [Visit the Project Wiki](#team-1--release-wiki).
+
+### Title with C# and odd symbols !@#
+
+### Configuración en español
+
+### 1. Starts with a digit
+
+Those last three are the cases the documentation does not specify. Compare them
+against a real wiki.
 
 ---
 
-## 4. KaTeX — IMPLEMENTADO
+## 4. KaTeX — IMPLEMENTED
 
-Inline pegado: $E = mc^2$ — y con espacios, como en el ejemplo de la
-documentación de Azure DevOps: $ A + B = C $
+Tight inline: $E = mc^2$ — and spaced, as in the Azure DevOps documentation's
+own example: $ A + B = C $
 
-Bloque:
+Block:
 
 $$
 \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2}
 $$
 
-Los precios **no** deben convertirse: cuesta $5 y $10.
+Prices must **not** be converted: it costs $5 and $10.
 
-Fórmula inválida, debe mostrar el error de KaTeX en su sitio: $\frac{roto$
+An invalid formula should report the error in place: $\frac{broken$
 
 ---
 
-## 5. Emoji por shortcode — IMPLEMENTADO
+## 5. Emoji shortcodes — IMPLEMENTED
 
 :smile: :rocket: :warning: :heavy_check_mark: :+1::+1:
 
-Los custom de GitHub **no** los soporta Azure DevOps, así que deben quedar
-literales: :bowtie: :octocat:
+Azure DevOps does **not** support GitHub's custom emoji, so these should stay
+literal: :bowtie: :octocat:
 
-Escape con barra invertida — deben verse los dos puntos, no el emoji:
+Backslash escaping — the colons should show, not the emoji:
 \:smile: \:angry: \:cry:
 
 ---
 
-## 6. Enlaces relativos de wiki — IMPLEMENTADO
+## 6. Relative wiki links — IMPLEMENTED
 
-Ojo: este archivo **no** está dentro de un wiki, así que ninguno resuelve y
-todos deben quedar tal cual se escribieron. Para verlos funcionar, abre
-`sample/wiki/Onboarding.md`, que sí tiene raíz.
+Note: this file is **not** inside a wiki, so none of these resolve and all
+should stay exactly as written. Open `sample/wiki/Onboarding.md` to see them
+working against a real root.
 
-- [Página hermana](./Otra-Pagina)
-- [Con guion escapado](./Build%2DAnd%2DRelease)
-- [Subpágina](/Equipo/Onboarding)
+- [Sibling page](./Another-Page)
+- [With an escaped hyphen](./Build%2DAnd%2DRelease)
+- [Subpage](/Team/Onboarding)
 
-El escapado `%2D` importa: en Azure DevOps `A-B` y `A%2DB` son páginas
-distintas.
-
----
-
-## 7. Referencias a work items — NO IMPLEMENTADO A PROPÓSITO
-
-Work item #123, pull request !456, color hex #123456, error #404.
-
-Los cuatro deben quedar como **texto plano**. En Azure DevOps el `#` es una
-ayuda del editor (autosuggest) que inserta un enlace normal en el archivo; no
-hay nada que documente que un `#123` guardado se convierta en chip. Y `!456` no
-aparece en la documentación.
-
-Convertirlos automáticamente rompería los dos últimos casos de esta línea.
+The `%2D` escape matters: in Azure DevOps `A-B` and `A%2DB` are different pages.
 
 ---
 
-## 8. GFM base — debe seguir funcionando
+## 7. Work item references — DELIBERATELY NOT IMPLEMENTED
 
-| Feature | Estado |
+Work item #123, pull request !456, colour hex #123456, error #404.
+
+All four should stay **plain text**. In Azure DevOps the `#` is an editor
+affordance (autosuggest) that inserts an ordinary link into the file; nothing
+documents a saved `#123` becoming a chip, and `!456` does not appear in the
+documentation at all.
+
+Converting them automatically would break the last two cases on that line.
+
+---
+
+## 8. GFM basics — must keep working
+
+| Feature | Status |
 | --- | --- |
-| Tablas | ✅ |
-| Tachado | ~~así~~ |
-| Checklists | ver abajo |
+| Tables | ✅ |
+| Strikethrough | ~~like this~~ |
+| Checklists | see below |
 
-- [x] Tarea hecha
-- [ ] Tarea pendiente
+- [x] Done task
+- [ ] Pending task
 
-> Cita en bloque
-> con dos líneas.
+> Block quote
+> across two lines.
 
-`código inline` y un enlace [normal](https://example.test).
+`inline code` and a [normal link](https://example.test).
 
 ---
 
-## 9. Casos borde
+## 9. Edge cases
 
-### Container indentado cuatro espacios
+### Container indented four spaces
 
     ::: mermaid
-    esto es un bloque de código
+    this is a code block
 
 ### Overview
 
-Tercer "Overview" del documento: debe recibir `overview-2`.
+The document's third "Overview": it should get `overview-2`.
 
-### Container sin cerrar
+### Unclosed container
 
-Va al final a propósito: un container sin cerrar se come todo lo que sigue,
-igual que un code fence sin cerrar.
+Last on purpose: an unclosed container swallows everything after it, exactly
+like an unclosed code fence.
 
 ::: mermaid
 graph LR
