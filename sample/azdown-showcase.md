@@ -130,11 +130,15 @@ Hoy se ve el `$` literal.
 
 ---
 
-## 5. Emoji por shortcode — PENDIENTE
+## 5. Emoji por shortcode — IMPLEMENTADO
 
-:smile: :rocket: :warning: :heavy_check_mark:
+:smile: :rocket: :warning: :heavy_check_mark: :+1::+1:
 
-Hoy se ven los dos puntos literales.
+Los custom de GitHub **no** los soporta Azure DevOps, así que deben quedar
+literales: :bowtie: :octocat:
+
+Escape con barra invertida — deben verse los dos puntos, no el emoji:
+\:smile: \:angry: \:cry:
 
 ---
 
