@@ -24,6 +24,10 @@ files already on your disk.
 - **`[[_TOC_]]`** — table of contents, nested by heading level.
 - **`[[_TOSP_]]`** — table of subpages, listing the real child pages.
 - **Heading anchors** using Azure DevOps's slug algorithm.
+- **Links between pages work.** Azure DevOps writes them without a `.md`
+  extension and resolves root-absolute ones against the wiki, so locally they
+  normally lead nowhere. Links to headings work too, and a link that resolves
+  to nothing is left exactly as you wrote it.
 
 ### Wiki-aware
 
@@ -48,7 +52,7 @@ Being honest about scope:
 - KaTeX rendering (`$…$`, `$$…$$`, and the body of `::: math`)
 - `:shortcode:` emoji
 - `#123` / `!456` reference chips
-- Relative links between wiki pages
+- Page-name completion and broken-link warnings while editing
 - Azure DevOps visual styling
 
 ## Settings

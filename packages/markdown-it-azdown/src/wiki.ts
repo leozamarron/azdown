@@ -15,6 +15,20 @@ export interface WikiProvider {
 	 * Used by `[[_TOSP_]]`.
 	 */
 	subpages(documentPath: string): SubpageEntry[];
+
+	/**
+	 * Resolves a wiki link target to an absolute file path on disk, or
+	 * `undefined` when nothing matches.
+	 *
+	 * `target` is the href as the author wrote it, minus any `#fragment`, and
+	 * still percent-encoded: `%2D` is part of the file name, not an escape to
+	 * undo. Azure DevOps omits the `.md` extension and writes root-absolute
+	 * paths relative to the wiki root, so both have to be tried.
+	 *
+	 * Optional: a host with no filesystem (a browser bundle) simply leaves
+	 * links untouched.
+	 */
+	resolveLink?(documentPath: string, target: string): string | undefined;
 }
 
 export interface SubpageEntry {

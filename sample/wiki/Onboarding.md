@@ -21,3 +21,16 @@ icono de imagen rota, azdown no encontró la raíz del wiki.
 ### Primer paso
 
 ### Segundo paso
+
+## Enlaces entre páginas
+
+Al estilo Azure DevOps: sin `.md`, y las absolutas desde la raíz del wiki.
+
+- [Absoluta](/Build-And-Release)
+- [A subpágina](/Onboarding/Permisos)
+- [Relativa](./Onboarding/Guia-rapida)
+- [Con %2D](/Azure%2DDevOps-Notas)
+- [A un encabezado](/Build-And-Release#build-and-release)
+- [En esta página](#imagen-adjunta)
+- [Rota, se queda igual](/No-Existe)
+- [Externa](https://learn.microsoft.com/azure/devops/project/wiki/markdown-guidance)
