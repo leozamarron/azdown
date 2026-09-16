@@ -4,6 +4,7 @@ import { tocPlugin } from './toc.js';
 import { anchorsPlugin } from './anchors.js';
 import { imagesPlugin } from './images.js';
 import { linksPlugin } from './links.js';
+import { emojiPluginAzdown } from './emoji.js';
 import type { WikiProvider } from './wiki.js';
 
 export { slugify, SlugBuilder } from './slug.js';
@@ -12,6 +13,7 @@ export { tocPlugin } from './toc.js';
 export { anchorsPlugin } from './anchors.js';
 export { imagesPlugin } from './images.js';
 export { linksPlugin } from './links.js';
+export { emojiPluginAzdown } from './emoji.js';
 export { relativePath, dirname, documentPath } from './paths.js';
 export { pageTitle, pageFileName, ATTACHMENTS_PREFIX } from './wiki.js';
 export type { WikiProvider, SubpageEntry } from './wiki.js';
@@ -93,9 +95,9 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 	// container body, which containers.ts currently emits verbatim.
 	void opts.math;
 
-	// TODO(emoji): `:shortcode:` -> emoji. Azure DevOps's exact shortcode set is
-	// unverified; check it against a real wiki before picking a table.
-	void opts.emoji;
+	if (opts.emoji) {
+		emojiPluginAzdown(md);
+	}
 
 	// TODO(wiki-links): completions for page names and diagnostics for broken
 	// links are still missing. Those are editor language features rather than

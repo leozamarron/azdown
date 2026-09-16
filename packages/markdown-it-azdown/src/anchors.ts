@@ -34,7 +34,9 @@ export function plainText(inline: Token | undefined): string {
 	}
 	let out = '';
 	for (const child of inline.children) {
-		if (child.type === 'text' || child.type === 'code_inline') {
+		// `emoji` is included to match VS Code's own heading slugifier, which
+		// flattens text, emoji and code spans and nothing else.
+		if (child.type === 'text' || child.type === 'code_inline' || child.type === 'emoji') {
 			out += child.content;
 		}
 	}

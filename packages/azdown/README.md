@@ -23,6 +23,8 @@ files already on your disk.
 - **`::: video` and `::: math` containers.**
 - **`[[_TOC_]]`** — table of contents, nested by heading level.
 - **`[[_TOSP_]]`** — table of subpages, listing the real child pages.
+- **`:shortcode:` emoji** — the GitHub set Azure DevOps uses, without GitHub's
+  custom ones, and `\\:smile:` escapes the conversion.
 - **Heading anchors** following the slug algorithm Microsoft documents,
   including its one published worked example.
 - **Azure DevOps styling** — type scale, heading rules, bordered tables and the
@@ -57,7 +59,6 @@ The wiki root is detected automatically from `.order` files. Override it with
 Being honest about scope:
 
 - KaTeX rendering (`$…$`, `$$…$$`, and the body of `::: math`)
-- `:shortcode:` emoji
 - `#123` / `!456` reference chips
 - Page-name completion and broken-link warnings while editing
 

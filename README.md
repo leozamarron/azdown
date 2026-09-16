@@ -25,7 +25,7 @@ already on your disk.
 | Wiki tree panel | Implemented — activity bar view, `.order` aware, with authoring actions |
 | Heading anchors | Implemented; slug algorithm **unverified** against a live wiki |
 | KaTeX | TODO |
-| `:shortcode:` emoji | TODO |
+| `:shortcode:` emoji | Implemented |
 | Relative wiki links (`%2D` escaping) | Implemented |
 | `#123` / `!456` ref chips | TODO |
 | Azure DevOps styling | Implemented — theme-aware, light and dark |
