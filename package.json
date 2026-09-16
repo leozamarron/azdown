@@ -11,11 +11,11 @@
     "packages/*"
   ],
   "scripts": {
-    "compile": "npm run compile --workspace packages/markdown-it-azdown && npm run compile --workspace packages/azdown",
-    "watch": "npm run watch --workspace packages/azdown",
+    "build:plugin": "npm run compile --workspace packages/markdown-it-azdown",
+    "compile": "npm run build:plugin && npm run compile --workspace packages/azdown",
+    "check-types": "npm run build:plugin && npm run check-types --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspace packages/markdown-it-azdown",
-    "check-types": "npm run check-types --workspaces --if-present",
     "test:vscode": "npm run test --workspace packages/azdown"
   },
   "overrides": {

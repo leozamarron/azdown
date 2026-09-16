@@ -46,7 +46,10 @@ jobs:
           test -x node_modules/@esbuild/linux-x64/bin/esbuild \
             || { echo "::error::esbuild native binary missing -- check allowScripts in the root package.json"; exit 1; }
 
-      - run: npm run check-types
+      # compile before anything else: it builds the plugin's .d.ts, which the
+      # extension's type check imports. Running check-types on its own used to
+      # pass only because a previous build had left dist/ behind.
+      - run: npm run compile
       - run: npm run lint
       - run: npm test
 
