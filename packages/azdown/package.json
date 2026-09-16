@@ -1,6 +1,7 @@
 {
   "name": "azdown",
   "displayName": "azdown",
+  "publisher": "leozamarron",
   "description": "Renders Markdown in VS Code exactly like Azure DevOps Wiki does — syntax and styling.",
   "version": "0.0.1",
   "license": "MIT",
@@ -10,6 +11,7 @@
   },
   "categories": [
     "Programming Languages",
+    "Visualization",
     "Other"
   ],
   "activationEvents": [],
@@ -96,7 +98,9 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package:vsix": "npm run package && npx --yes @vscode/vsce package --no-dependencies",
+    "publish:marketplace": "npm run package && npx --yes @vscode/vsce publish --no-dependencies"
   },
   "devDependencies": {
     "@types/vscode": "1.75.0",
@@ -113,5 +117,30 @@
   },
   "dependencies": {
     "markdown-it-azdown": "*"
+  },
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leozamarron/azdown.git",
+    "directory": "packages/azdown"
+  },
+  "bugs": {
+    "url": "https://github.com/leozamarron/azdown/issues"
+  },
+  "homepage": "https://github.com/leozamarron/azdown#readme",
+  "keywords": [
+    "azure devops",
+    "azure devops wiki",
+    "wiki",
+    "markdown",
+    "markdown preview",
+    "mermaid",
+    "toc",
+    "katex",
+    "ado"
+  ],
+  "galleryBanner": {
+    "color": "#0078D4",
+    "theme": "dark"
   }
 }
