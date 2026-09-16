@@ -3,6 +3,7 @@ import type { StateBlock, Token } from './types.js';
 import { azdownEnv, plainText, type HeadingEntry } from './anchors.js';
 import type { WikiProvider } from './wiki.js';
 import { SlugBuilder } from './slug.js';
+import { documentPath } from './paths.js';
 
 const TOC = '[[_TOC_]]';
 const TOSP = '[[_TOSP_]]';
@@ -118,13 +119,6 @@ function renderEntries(all: HeadingEntry[]): string {
 	out += '</li>\n</ul>\n</nav>\n';
 
 	return out;
-}
-
-/** Best-effort filesystem path out of whatever the host put in `currentDocument`. */
-function documentPath(env: unknown): string | undefined {
-	const doc = (env as { currentDocument?: { fsPath?: string; path?: string } } | undefined)
-		?.currentDocument;
-	return doc?.fsPath ?? doc?.path;
 }
 
 function renderSubpages(env: unknown, wiki: WikiProvider | undefined): string {

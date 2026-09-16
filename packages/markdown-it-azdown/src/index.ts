@@ -3,13 +3,16 @@ import { containersPlugin } from './containers.js';
 import { tocPlugin } from './toc.js';
 import { anchorsPlugin } from './anchors.js';
 import { imagesPlugin } from './images.js';
+import { linksPlugin } from './links.js';
 import type { WikiProvider } from './wiki.js';
 
 export { slugify, SlugBuilder } from './slug.js';
 export { containersPlugin } from './containers.js';
 export { tocPlugin } from './toc.js';
 export { anchorsPlugin } from './anchors.js';
-export { imagesPlugin, relativePath } from './images.js';
+export { imagesPlugin } from './images.js';
+export { linksPlugin } from './links.js';
+export { relativePath, dirname, documentPath } from './paths.js';
 export { pageTitle, ATTACHMENTS_PREFIX } from './wiki.js';
 export type { WikiProvider, SubpageEntry } from './wiki.js';
 
@@ -81,6 +84,9 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 
 	if (options.wiki) {
 		imagesPlugin(md, options.wiki);
+		if (opts.wikiLinks) {
+			linksPlugin(md, options.wiki);
+		}
 	}
 
 	// TODO(katex): inline `$...$` and block `$$...$$`, plus the `::: math`
@@ -91,11 +97,9 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 	// unverified; check it against a real wiki before picking a table.
 	void opts.emoji;
 
-	// TODO(wiki-links): relative page links between wiki pages. The `%2D`
-	// un-escaping already lives in wiki.ts (pageTitle); what is missing is
-	// rewriting the hrefs themselves, which needs the same core-rule treatment
-	// as images because VS Code also wraps `renderer.rules.link_open`.
-	void opts.wikiLinks;
+	// TODO(wiki-links): completions for page names and diagnostics for broken
+	// links are still missing. Those are editor language features rather than
+	// rendering, so they belong in the extension, not here.
 
 	// TODO(refs): `#123` work items and `!456` pull requests as styled chips.
 	// Render-only by design: no PAT, no org connection, so a chip shows the ref

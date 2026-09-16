@@ -105,6 +105,64 @@ export class WikiRoot implements WikiProvider {
 		}));
 	}
 
+	/**
+	 * Resolves a wiki link target to a file on disk.
+	 *
+	 * Azure DevOps omits the `.md` extension and writes root-absolute links
+	 * relative to the *wiki* root, so both have to be tried. The target arrives
+	 * still percent-encoded because `%2D` is part of the file name -- but an
+	 * author may equally have written the decoded form, so both spellings are
+	 * candidates.
+	 */
+	resolveLink(documentPath: string, target: string): string | undefined {
+		if (target === '') {
+			return undefined;
+		}
+
+		const absolute = target.startsWith('/');
+		const base = absolute ? this.current : path.dirname(documentPath);
+		if (!base) {
+			// A root-absolute link is meaningless without knowing the root, and
+			// guessing the workspace folder is what breaks these links today.
+			return undefined;
+		}
+
+		const spellings = new Set([absolute ? target.slice(1) : target]);
+		try {
+			spellings.add(decodeURIComponent(absolute ? target.slice(1) : target));
+		} catch {
+			// Malformed percent-encoding: the raw spelling is still worth trying.
+		}
+
+		for (const spelling of spellings) {
+			const joined = path.resolve(base, spelling);
+			if (!this.within(joined)) {
+				// Never let `../../..` walk a link out of the wiki.
+				continue;
+			}
+			for (const candidate of [`${joined}.md`, joined]) {
+				try {
+					if (fs.statSync(candidate).isFile()) {
+						return candidate;
+					}
+				} catch {
+					// Does not exist; try the next candidate.
+				}
+			}
+		}
+
+		return undefined;
+	}
+
+	/** True when `candidate` sits inside the wiki root, or no root is known. */
+	private within(candidate: string): boolean {
+		if (!this.current) {
+			return true;
+		}
+		const rel = path.relative(this.current, candidate);
+		return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+	}
+
 	async detect(): Promise<void> {
 		const configured = await fromSetting();
 		const detected = configured ? undefined : await fromOrderFiles();

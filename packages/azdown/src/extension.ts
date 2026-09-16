@@ -38,11 +38,27 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		});
 
+	/**
+	 * Re-render every open preview.
+	 *
+	 * Previews only re-render when their *document* changes, but everything the
+	 * wiki context feeds -- [[_TOSP_]], attachment paths, page links -- depends
+	 * on files the preview never sees. Without this, changing the wiki root
+	 * leaves every open preview showing stale output until the user happens to
+	 * type in it.
+	 */
+	const refreshPreviews = (): void => {
+		void vscode.commands.executeCommand('markdown.preview.refresh');
+	};
+
 	context.subscriptions.push(
 		log,
 		wiki,
 		vscode.window.registerTreeDataProvider('azdown.pages', tree),
-		wiki.onDidChange(() => tree.refresh()),
+		wiki.onDidChange(() => {
+			tree.refresh();
+			refreshPreviews();
+		}),
 
 		command('azdown.refresh', async () => {
 			await wiki.detect();
@@ -93,10 +109,21 @@ export function activate(context: vscode.ExtensionContext) {
 	// Keep the tree honest as pages come and go. `.order` matters as much as
 	// the .md files themselves, since it drives both ordering and detection.
 	const watcher = vscode.workspace.createFileSystemWatcher('**/{*.md,.order}');
+
+	// A page appearing or disappearing changes other pages' output -- subpage
+	// lists, and whether a link resolves -- so previews need re-rendering too.
+	// Plain edits do not: VS Code already re-renders the document being edited.
+	const structureChanged = (): void => {
+		void wiki.detect().then(() => {
+			tree.refresh();
+			refreshPreviews();
+		});
+	};
+
 	context.subscriptions.push(
 		watcher,
-		watcher.onDidCreate(() => void wiki.detect().then(() => tree.refresh())),
-		watcher.onDidDelete(() => void wiki.detect().then(() => tree.refresh())),
+		watcher.onDidCreate(structureChanged),
+		watcher.onDidDelete(structureChanged),
 		watcher.onDidChange(() => tree.refresh())
 	);
 

@@ -1,14 +1,16 @@
 # azdown
 
-Renders Markdown in VS Code exactly like Azure DevOps Wiki does — syntax and styling.
+Preview your Azure DevOps wiki in VS Code the way it looks in the browser.
 
-Extends VS Code's **built-in** Markdown preview, so <kbd>Ctrl</kbd>+<kbd>K</kbd>
-<kbd>V</kbd>, scroll sync and theme integration keep working. There is no
-separate preview window to learn.
+If you keep your wiki in a Git repo, you already know the gap: you open a page
+locally and the diagrams are raw text, the table of contents is literal
+`[[_TOC_]]`, and half the images are broken. azdown closes that gap, so you can
+read and write wiki pages without switching to the browser to check your work.
 
-**No credentials.** azdown never asks for a Personal Access Token and never
-contacts your organization. Work item and pull request references are styled
-locally, not resolved.
+It extends VS Code's **built-in** Markdown preview rather than adding another
+one, so <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>V</kbd>, scroll sync and your theme
+all keep working exactly as you expect. Everything runs locally against the
+files already on your disk.
 
 ## Features
 
@@ -22,6 +24,10 @@ locally, not resolved.
 - **`[[_TOC_]]`** — table of contents, nested by heading level.
 - **`[[_TOSP_]]`** — table of subpages, listing the real child pages.
 - **Heading anchors** using Azure DevOps's slug algorithm.
+- **Links between pages work.** Azure DevOps writes them without a `.md`
+  extension and resolves root-absolute ones against the wiki, so locally they
+  normally lead nowhere. Links to headings work too, and a link that resolves
+  to nothing is left exactly as you wrote it.
 
 ### Wiki-aware
 
@@ -46,7 +52,7 @@ Being honest about scope:
 - KaTeX rendering (`$…$`, `$$…$$`, and the body of `::: math`)
 - `:shortcode:` emoji
 - `#123` / `!456` reference chips
-- Relative links between wiki pages
+- Page-name completion and broken-link warnings while editing
 - Azure DevOps visual styling
 
 ## Settings

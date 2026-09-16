@@ -1,16 +1,11 @@
 # azdown
 
-Renders Markdown in VS Code exactly like Azure DevOps Wiki does — syntax and styling.
+Preview your Azure DevOps wiki in VS Code the way it looks in the browser.
 
-Hooks into VS Code's **built-in** Markdown preview via the
+Extends VS Code's **built-in** Markdown preview via the
 `markdown.markdownItPlugins` contribution point, so `Ctrl+K V`, scroll sync and
-theme integration keep working. No separate preview webview, and no
-credentials: nothing ever asks for a PAT or contacts an organization.
-
-An activity-bar panel lists the wiki's pages under their Azure DevOps display
-titles (`Build-And-Release.md` shows as "Build And Release"). Picking the wiki
-root is not cosmetic: it is the context that makes `[[_TOSP_]]` and
-`/.attachments/` image links resolvable at all.
+theme integration keep working. Everything runs locally against the files
+already on your disk.
 
 ## Layout
 
@@ -31,7 +26,7 @@ root is not cosmetic: it is the context that makes `[[_TOSP_]]` and
 | Heading anchors | Implemented; slug algorithm **unverified** against a live wiki |
 | KaTeX | TODO |
 | `:shortcode:` emoji | TODO |
-| Relative wiki links (`%2D` escaping) | TODO |
+| Relative wiki links (`%2D` escaping) | Implemented |
 | `#123` / `!456` ref chips | TODO |
 | Azure DevOps styling | TODO — separate pass |
 

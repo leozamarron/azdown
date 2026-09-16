@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Wiki page tree in the activity bar, ordered by `.order` and showing Azure
   DevOps display titles.
 - `azdown.wikiRoot` setting, autodetected from `.order` files.
+- Links between wiki pages resolve: the missing `.md` extension, root-absolute
+  paths relative to the wiki, `%2D` in page names, and heading fragments.
+  Unresolvable links are left untouched rather than rewritten to a guess.
+- Open previews re-render when the wiki root changes or a page is added or
+  removed, instead of showing stale output until the document is edited.
 
 ### Known limitations
 
