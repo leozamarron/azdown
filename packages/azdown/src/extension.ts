@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import type MarkdownIt from 'markdown-it';
 import { azdown } from 'markdown-it-azdown';
-import * as path from 'node:path';
 import { WikiRoot, createPage, wikiPathOf } from './wiki.js';
 import { WikiTreeProvider, type PageItem } from './tree.js';
 
@@ -22,6 +21,11 @@ export function activate(context: vscode.ExtensionContext) {
 		treeDataProvider: tree,
 		showCollapseAll: true
 	});
+	const background = (action: string, task: PromiseLike<unknown>): void => {
+		void Promise.resolve(task).catch((err: unknown) => {
+			log.appendLine(`[${action}] failed: ${err instanceof Error ? err.message : String(err)}`);
+		});
+	};
 
 	/**
 	 * Selects the page the user is editing.
@@ -54,10 +58,10 @@ export function activate(context: vscode.ExtensionContext) {
 	 * ConfigurationTarget.Workspace, which throws when the window has no folder
 	 * open, and the error went nowhere.
 	 */
-	const command = (id: string, run: () => Promise<void>): vscode.Disposable =>
-		vscode.commands.registerCommand(id, async () => {
+	const command = (id: string, run: (item?: PageItem) => Promise<void>): vscode.Disposable =>
+		vscode.commands.registerCommand(id, async (item?: PageItem) => {
 			try {
-				await run();
+				await run(item);
 			} catch (err) {
 				const message = err instanceof Error ? err.message : String(err);
 				log.appendLine(`[${id}] failed: ${message}`);
@@ -75,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 	 * type in it.
 	 */
 	const refreshPreviews = (): void => {
-		void vscode.commands.executeCommand('markdown.preview.refresh');
+		background('refresh previews', vscode.commands.executeCommand('markdown.preview.refresh'));
 	};
 
 	/** Shared by "New Page" (view title) and "New Subpage" (context menu). */
@@ -102,6 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		await wiki.detect();
 		tree.refresh();
+		refreshPreviews();
 		// Open it for editing: the point of creating a page is writing it.
 		await vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false });
 	}
@@ -109,6 +114,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		log,
 		wiki,
+		tree,
 		view,
 		wiki.onDidChange(() => {
 			tree.refresh();
@@ -118,6 +124,7 @@ export function activate(context: vscode.ExtensionContext) {
 		command('azdown.refresh', async () => {
 			await wiki.detect();
 			tree.refresh();
+			refreshPreviews();
 		}),
 
 		command('azdown.chooseWikiRoot', async () => {
@@ -179,41 +186,59 @@ export function activate(context: vscode.ExtensionContext) {
 		command('azdown.newPage', (item?: PageItem) => newPage(item)),
 		command('azdown.newSubpage', (item?: PageItem) => newPage(item)),
 
-		vscode.window.onDidChangeActiveTextEditor(() => void revealActive()),
-		view.onDidChangeVisibility(() => void revealActive()),
+		vscode.window.onDidChangeActiveTextEditor(() => background('reveal active page', revealActive())),
+		view.onDidChangeVisibility(() => background('reveal active page', revealActive())),
 
-		vscode.workspace.onDidChangeConfiguration(async (e) => {
+		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration('azdown.wikiRoot')) {
-				await wiki.detect();
+				background('detect wiki', wiki.detect());
 			}
 		}),
 
 		// A workspace folder appearing is the other way a wiki can show up.
-		vscode.workspace.onDidChangeWorkspaceFolders(() => void wiki.detect())
+		vscode.workspace.onDidChangeWorkspaceFolders(() => background('detect wiki', wiki.detect()))
 	);
 
 	// Keep the tree honest as pages come and go. `.order` matters as much as
 	// the .md files themselves, since it drives both ordering and detection.
-	const watcher = vscode.workspace.createFileSystemWatcher('**/{*.md,.order}');
+	// Watch the selected root as well as workspace folders: the picker can
+	// select a wiki outside the workspace, including in an empty window.
+	let rootWatcher: vscode.FileSystemWatcher | undefined;
 
 	// A page appearing or disappearing changes other pages' output -- subpage
 	// lists, and whether a link resolves -- so previews need re-rendering too.
 	// Plain edits do not: VS Code already re-renders the document being edited.
 	const structureChanged = (): void => {
-		void wiki.detect().then(() => {
+		background('refresh wiki', wiki.detect().then(() => {
 			tree.refresh();
 			refreshPreviews();
-		});
+		}));
 	};
 
+	const watch = (pattern: vscode.GlobPattern): vscode.FileSystemWatcher => {
+		const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+		watcher.onDidCreate(structureChanged);
+		watcher.onDidDelete(structureChanged);
+		watcher.onDidChange((uri) => {
+			if (uri.path.endsWith('/.order')) {
+				structureChanged();
+			}
+		});
+		return watcher;
+	};
 	context.subscriptions.push(
-		watcher,
-		watcher.onDidCreate(structureChanged),
-		watcher.onDidDelete(structureChanged),
-		watcher.onDidChange(() => tree.refresh())
+		watch('**/{*.md,*.MD,.order}'),
+		wiki.onDidChange(() => {
+			rootWatcher?.dispose();
+			const root = wiki.root();
+			rootWatcher = root && !vscode.workspace.getWorkspaceFolder(vscode.Uri.file(root))
+				? watch(new vscode.RelativePattern(root, '**/{*.md,*.MD,.order}'))
+				: undefined;
+		}),
+		{ dispose: () => rootWatcher?.dispose() }
 	);
 
-	void wiki.detect().then(() => revealActive());
+	background('initialize wiki', wiki.detect().then(() => revealActive()));
 
 	return {
 		extendMarkdownIt(md: MarkdownIt): MarkdownIt {

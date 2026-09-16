@@ -1,5 +1,5 @@
 import type MarkdownIt from 'markdown-it';
-import { relativePath, documentPath, dirname } from './paths.js';
+import { relativePath, documentPath, dirname, pathToHref } from './paths.js';
 import { onBeforeRender, walkTokens, originalAttr } from './prerender.js';
 import { slugify } from './slug.js';
 import type { WikiProvider } from './wiki.js';
@@ -70,10 +70,6 @@ function isExternal(path: string): boolean {
 export function linksPlugin(md: MarkdownIt, wiki: WikiProvider): void {
 	onBeforeRender(md, (tokens, env) => {
 		const docPath = documentPath(env);
-		if (!docPath) {
-			return;
-		}
-
 		walkTokens(tokens, (token) => {
 			if (token.type !== 'link_open') {
 				return;
@@ -81,6 +77,12 @@ export function linksPlugin(md: MarkdownIt, wiki: WikiProvider): void {
 
 			const href = originalAttr(token, 'href');
 			if (!href || isExternal(href)) {
+				return;
+			}
+			// Cached tokens may still point at the previous wiki or at a page
+			// that has since been deleted. Restore before attempting resolution.
+			token.attrSet('href', href);
+			if (!docPath) {
 				return;
 			}
 
@@ -104,7 +106,7 @@ export function linksPlugin(md: MarkdownIt, wiki: WikiProvider): void {
 				return;
 			}
 
-			const rel = relativePath(dirname(docPath), target);
+			const rel = pathToHref(relativePath(dirname(docPath), target));
 			token.attrSet('href', anchor === '' ? rel : `${rel}#${anchor}`);
 		});
 	});

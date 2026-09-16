@@ -5,6 +5,28 @@ All notable changes to the azdown extension are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Tree commands receive the selected page; subpages are created under their
+  parent. Tree items retain stable identities and support Windows paths.
+- Wiki links encode literal percent signs and other URL characters. Cached
+  links and attachments reset when their wiki context or target disappears.
+- Tables of contents survive repeated renders, handle skipped heading levels,
+  and link consistently to emoji headings and unique generated anchors.
+- `.order` edits refresh previews, and selected wikis outside the workspace
+  are watched. Invalid roots no longer count as detected wikis.
+- Page creation uses exclusive writes and removes the newly created page if
+  updating `.order` fails. Existing newline styles are preserved.
+- Slow Mermaid renders cannot replace a newer diagram or theme. Unclosed
+  containers inside lists no longer consume content outside the list.
+
+### Added
+
+- Host and preview regression tests run with `npm test`, without a display or
+  a VS Code download.
+
 ## [0.1.0] - 2026-09-16
 
 ### Added

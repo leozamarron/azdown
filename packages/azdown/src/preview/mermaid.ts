@@ -63,6 +63,8 @@ async function renderOne(el: HTMLElement, theme: Theme): Promise<void> {
 	}
 	const source = el.getAttribute(SOURCE_ATTR) ?? '';
 	const stamp = theme + ' ' + source;
+	const isCurrent = (): boolean => el.isConnected &&
+		el.getAttribute(SOURCE_ATTR) === source && themeName() === theme;
 
 	if (el.getAttribute(RENDERED_ATTR) === stamp) {
 		return; // already showing exactly this
@@ -73,9 +75,15 @@ async function renderOne(el: HTMLElement, theme: Theme): Promise<void> {
 
 	try {
 		const { svg } = await mermaid.render('azdown-mermaid-' + counter++, source);
+		if (!isCurrent()) {
+			return;
+		}
 		el.innerHTML = svg;
 		el.removeAttribute(ERROR_ATTR);
 	} catch (err) {
+		if (!isCurrent()) {
+			return;
+		}
 		// Show the parser's complaint in place. Silently leaving the raw source
 		// would look like the extension simply did not run.
 		el.textContent = err instanceof Error ? err.message : String(err);
@@ -84,14 +92,29 @@ async function renderOne(el: HTMLElement, theme: Theme): Promise<void> {
 	el.setAttribute(RENDERED_ATTR, stamp);
 }
 
+let rendering = false;
+let requested = false;
+
 async function renderAll(): Promise<void> {
-	const theme = themeName();
-	if (theme !== currentTheme) {
-		configure(theme);
+	requested = true;
+	if (rendering) {
+		return;
 	}
-	const nodes = document.querySelectorAll<HTMLElement>('div.mermaid');
-	for (const node of nodes) {
-		await renderOne(node, theme);
+	rendering = true;
+	try {
+		do {
+			requested = false;
+			const theme = themeName();
+			if (theme !== currentTheme) {
+				configure(theme);
+			}
+			const nodes = document.querySelectorAll<HTMLElement>('div.mermaid');
+			for (const node of nodes) {
+				await renderOne(node, theme);
+			}
+		} while (requested);
+	} finally {
+		rendering = false;
 	}
 }
 
@@ -120,5 +143,5 @@ new MutationObserver(schedule).observe(document.body, {
 	childList: true,
 	subtree: true,
 	attributes: true,
-	attributeFilter: ['class']
+	attributeFilter: ['class', SOURCE_ATTR]
 });

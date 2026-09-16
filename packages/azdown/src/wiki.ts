@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { pageTitle, pageFileName, type SubpageEntry, type WikiProvider } from 'markdown-it-azdown';
+import { pageTitle, pageFileName, pathToHref, type SubpageEntry, type WikiProvider } from 'markdown-it-azdown';
 
 /**
  * Azure DevOps wiki repositories carry a `.order` file in every directory that
@@ -52,8 +52,14 @@ export function createPage(parentDir: string, title: string): string {
 	}
 
 	fs.mkdirSync(parentDir, { recursive: true });
-	fs.writeFileSync(file, `# ${title}\n`, 'utf8');
-	addToOrder(parentDir, name);
+	fs.writeFileSync(file, `# ${title.trim()}\n`, { encoding: 'utf8', flag: 'wx' });
+	try {
+		addToOrder(parentDir, name);
+	} catch (err) {
+		// Leave no half-created page when registration fails.
+		fs.unlinkSync(file);
+		throw err;
+	}
 	return file;
 }
 
@@ -68,7 +74,10 @@ function addToOrder(dir: string, name: string): void {
 	let existing = '';
 	try {
 		existing = fs.readFileSync(orderFile, 'utf8');
-	} catch {
+	} catch (err) {
+		if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+			throw err;
+		}
 		// No .order yet: this page becomes its first entry.
 	}
 
@@ -76,8 +85,9 @@ function addToOrder(dir: string, name: string): void {
 		return;
 	}
 
-	const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
-	fs.appendFileSync(orderFile, `${separator}${name}\n`, 'utf8');
+	const newline = existing.includes('\r\n') ? '\r\n' : '\n';
+	const separator = existing === '' || existing.endsWith('\n') ? '' : newline;
+	fs.appendFileSync(orderFile, `${separator}${name}${newline}`, 'utf8');
 }
 
 /** Reads a `.order` file, returning page names in order. Missing file -> []. */
@@ -115,8 +125,8 @@ export function listPages(dir: string): WikiPage[] {
 		}
 	}
 
-	const ordered = readOrder(dir).filter((name) => files.has(name));
-	const rest = [...files.keys()].filter((name) => !ordered.includes(name)).sort();
+	const ordered = new Set(readOrder(dir).filter((name) => files.has(name)));
+	const rest = [...files.keys()].filter((name) => !ordered.has(name)).sort();
 
 	return [...ordered, ...rest].map((name) => {
 		const childrenDir = path.join(dir, name);
@@ -140,6 +150,7 @@ export function listPages(dir: string): WikiPage[] {
  */
 export class WikiRoot implements WikiProvider {
 	private current: string | undefined;
+	private detection = 0;
 
 	private readonly changed = new vscode.EventEmitter<void>();
 	readonly onDidChange = this.changed.event;
@@ -152,7 +163,7 @@ export class WikiRoot implements WikiProvider {
 
 	/** Children of the page whose file is `documentPath`. Used by `[[_TOSP_]]`. */
 	subpages(documentPath: string): SubpageEntry[] {
-		if (!this.current) {
+		if (!this.current || !this.within(documentPath)) {
 			return [];
 		}
 		const dir = documentPath.replace(/\.md$/i, '');
@@ -161,7 +172,7 @@ export class WikiRoot implements WikiProvider {
 		return listPages(dir).map((page) => ({
 			title: page.title,
 			// Relative to the parent page, so the link works in the preview.
-			href: `./${path.relative(pageDir, page.file).split(path.sep).join('/')}`
+			href: pathToHref(`./${path.relative(pageDir, page.file).split(path.sep).join('/')}`)
 		}));
 	}
 
@@ -175,7 +186,7 @@ export class WikiRoot implements WikiProvider {
 	 * candidates.
 	 */
 	resolveLink(documentPath: string, target: string): string | undefined {
-		if (target === '') {
+		if (target === '' || !this.current || !this.within(documentPath)) {
 			return undefined;
 		}
 
@@ -200,7 +211,7 @@ export class WikiRoot implements WikiProvider {
 				// Never let `../../..` walk a link out of the wiki.
 				continue;
 			}
-			for (const candidate of [`${joined}.md`, joined]) {
+			for (const candidate of /\.md$/i.test(joined) ? [joined] : [`${joined}.md`, joined]) {
 				try {
 					if (fs.statSync(candidate).isFile()) {
 						return candidate;
@@ -220,23 +231,28 @@ export class WikiRoot implements WikiProvider {
 			return true;
 		}
 		const rel = path.relative(this.current, candidate);
-		return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+		return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
 	}
 
 	async detect(): Promise<void> {
+		const detection = ++this.detection;
 		const configured = await fromSetting();
 		const detected = configured ? undefined : await fromOrderFiles();
-		const next = configured ?? detected;
+		if (detection !== this.detection) {
+			return;
+		}
+		let next = configured ?? detected;
 
 		this.log.appendLine(
 			`[detect] setting=${configured ?? '-'} order=${detected ?? '-'} -> ${next ?? 'none'}`
 		);
 
-		if (next && !fs.existsSync(next)) {
+		if (next && !fs.statSync(next, { throwIfNoEntry: false })?.isDirectory()) {
 			// A stale setting pointing at a folder that no longer exists would
 			// otherwise leave the tree mysteriously empty.
-			this.log.appendLine(`[detect] configured wiki root does not exist: ${next}`);
-			void vscode.window.showWarningMessage(`azdown: wiki root does not exist: ${next}`);
+			this.log.appendLine(`[detect] wiki root is not an existing directory: ${next}`);
+			void vscode.window.showWarningMessage(`azdown: wiki root is not an existing directory: ${next}`);
+			next = undefined;
 		}
 
 		if (next === this.current) {
@@ -247,6 +263,7 @@ export class WikiRoot implements WikiProvider {
 	}
 
 	dispose(): void {
+		this.detection++;
 		this.changed.dispose();
 	}
 }
@@ -257,7 +274,7 @@ async function fromSetting(): Promise<string | undefined> {
 		return undefined;
 	}
 	if (path.isAbsolute(configured)) {
-		return configured;
+		return path.normalize(configured);
 	}
 	const folder = vscode.workspace.workspaceFolders?.[0];
 	return folder ? path.join(folder.uri.fsPath, configured) : undefined;

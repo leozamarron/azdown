@@ -4,6 +4,7 @@ import { azdownEnv, plainText, type HeadingEntry } from './anchors.js';
 import type { WikiProvider } from './wiki.js';
 import { SlugBuilder } from './slug.js';
 import { documentPath } from './paths.js';
+import { onBeforeRender } from './prerender.js';
 
 const TOC = '[[_TOC_]]';
 const TOSP = '[[_TOSP_]]';
@@ -68,9 +69,8 @@ function macroRule(state: StateBlock, startLine: number, _endLine: number, silen
 }
 
 /**
- * Falls back to scanning tokens when the anchor pass did not populate `env`.
- *
- * Only reachable if `headingAnchors` was disabled while the TOC was left on.
+ * Recover the anchor pass's headings from cached tokens. VS Code supplies a
+ * different env at render time, so the parse env is not a reliable source.
  */
 function scanHeadings(tokens: Token[]): HeadingEntry[] {
 	const slugs = new SlugBuilder();
@@ -80,7 +80,8 @@ function scanHeadings(tokens: Token[]): HeadingEntry[] {
 			continue;
 		}
 		const text = plainText(tokens[i + 1]);
-		out.push({ level: Number(tokens[i].tag.slice(1)), text, slug: slugs.next(text) });
+		const fallback = { level: Number(tokens[i].tag.slice(1)), text, slug: slugs.next(text) };
+		out.push(tokens[i].meta?.azdownHeading ?? fallback);
 	}
 	return out;
 }
@@ -103,36 +104,24 @@ function renderEntries(all: HeadingEntry[]): string {
 
 	const title = `<p class="azdown-toc-title">${TOC_TITLE}</p>\n`;
 
-	const base = Math.min(...entries.map((e) => e.level));
-	let out = `<nav class="azdown-toc">\n${title}<ul>\n`;
-	let current = base;
-
+	// Nest beneath the nearest preceding shallower heading. Skipped levels
+	// must not introduce <ul> directly inside <ul> or unmatched </li> tags.
+	interface Node { entry: HeadingEntry; children: Node[] }
+	const roots: Node[] = [];
+	const stack: Node[] = [];
 	for (const entry of entries) {
-		const level = entry.level;
-
-		if (level > current) {
-			for (let l = current; l < level; l++) {
-				out += '<ul>\n';
-			}
-		} else if (level < current) {
-			for (let l = level; l < current; l++) {
-				out += '</li>\n</ul>\n';
-			}
-			out += '</li>\n';
-		} else if (out.endsWith('</a>\n')) {
-			out += '</li>\n';
+		while (stack.length && stack[stack.length - 1].entry.level >= entry.level) {
+			stack.pop();
 		}
-
-		out += `<li><a href="#${encodeURIComponent(entry.slug)}">${escapeHtml(entry.text)}</a>\n`;
-		current = level;
+		const node: Node = { entry, children: [] };
+		(stack.length ? stack[stack.length - 1].children : roots).push(node);
+		stack.push(node);
 	}
-
-	for (let l = base; l < current; l++) {
-		out += '</li>\n</ul>\n';
-	}
-	out += '</li>\n</ul>\n</nav>\n';
-
-	return out;
+	const list = (nodes: Node[]): string => '<ul>\n' + nodes.map(({ entry, children }) =>
+		`<li><a href="#${encodeURIComponent(entry.slug)}">${escapeHtml(entry.text)}</a>\n` +
+		(children.length ? list(children) : '') + '</li>\n'
+	).join('') + '</ul>\n';
+	return `<nav class="azdown-toc">\n${title}${list(roots)}</nav>\n`;
 }
 
 function renderSubpages(env: unknown, wiki: WikiProvider | undefined): string {
@@ -140,9 +129,10 @@ function renderSubpages(env: unknown, wiki: WikiProvider | undefined): string {
 	const entries = wiki && path ? wiki.subpages(path) : [];
 
 	if (entries.length === 0) {
-		// Either no wiki context, or a genuine leaf page. A labelled empty nav
-		// beats both silently dropping the macro and inventing a page list.
-		return '<nav class="azdown-tosp" data-azdown-pending="subpages"></nav>\n';
+		// Only missing context needs a setup hint; a leaf page is already valid.
+		return wiki?.root() && path
+			? '<nav class="azdown-tosp"></nav>\n'
+			: '<nav class="azdown-tosp" data-azdown-pending="subpages"></nav>\n';
 	}
 
 	let out = `<nav class="azdown-tosp">\n<p class="azdown-tosp-title">${TOSP_TITLE}</p>\n<ul>\n`;
@@ -154,6 +144,13 @@ function renderSubpages(env: unknown, wiki: WikiProvider | undefined): string {
 }
 
 export function tocPlugin(md: MarkdownIt, wiki?: WikiProvider): void {
+	// Each render is independent, even when the host reuses tokens or env.
+	onBeforeRender(md, (tokens, env) => {
+		const state = azdownEnv(env);
+		state.tocRendered = false;
+		state.tospRendered = false;
+		state.headings = scanHeadings(tokens);
+	});
 	md.block.ruler.before(
 		'paragraph',
 		'azdown_macro',

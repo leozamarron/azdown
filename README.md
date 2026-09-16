@@ -37,7 +37,7 @@ Requires Node 24 (see `.nvmrc`).
 ```bash
 npm install
 npm run compile      # both packages
-npm test             # plugin unit tests -- no VS Code, no display needed
+npm test             # parser, host and preview unit tests; no display needed
 npm run lint
 ```
 

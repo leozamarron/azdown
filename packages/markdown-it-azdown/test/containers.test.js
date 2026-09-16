@@ -7,7 +7,7 @@ const render = (src, opts = {}) => new MarkdownIt(opts).use(azdown).render(src);
 
 test('::: mermaid emits a div.mermaid for client-side rendering', () => {
 	const html = render('::: mermaid\ngraph LR\n  A-->B\n:::\n');
-	assert.match(html, /<div class="mermaid">/);
+	assert.match(html, /<div class="mermaid"[^>]*>/);
 	assert.match(html, /graph LR/);
 });
 
@@ -54,12 +54,12 @@ test('an unknown container kind stays prose', () => {
 
 test('extra colons are tolerated on the fence', () => {
 	const html = render(':::: mermaid\ngraph LR\n::::\n');
-	assert.match(html, /<div class="mermaid">/);
+	assert.match(html, /<div class="mermaid"[^>]*>/);
 });
 
 test('an unclosed container runs to the end of the document', () => {
 	const html = render('::: mermaid\ngraph LR\n');
-	assert.match(html, /<div class="mermaid">/);
+	assert.match(html, /<div class="mermaid"[^>]*>/);
 	assert.match(html, /graph LR/);
 });
 
@@ -71,7 +71,7 @@ test('a four-space indented fence is a code block, not a container', () => {
 
 test('content after a closed container keeps parsing', () => {
 	const html = render('::: mermaid\ngraph LR\n:::\n\n# Despues\n');
-	assert.match(html, /<div class="mermaid">/);
+	assert.match(html, /<div class="mermaid"[^>]*>/);
 	assert.match(html, /<h1><a class="azdown-anchor" id="despues"><\/a>Despues<\/h1>/);
 });
 

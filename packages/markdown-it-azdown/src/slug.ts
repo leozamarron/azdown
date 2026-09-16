@@ -48,11 +48,17 @@ export function slugify(text: string): string {
  */
 export class SlugBuilder {
 	private readonly seen = new Map<string, number>();
+	private readonly used = new Set<string>();
 
 	next(text: string): string {
 		const base = slugify(text);
-		const count = this.seen.get(base) ?? 0;
+		let count = this.seen.get(base) ?? 0;
+		let slug = count === 0 ? base : `${base}-${count}`;
+		while (this.used.has(slug)) {
+			slug = `${base}-${++count}`;
+		}
 		this.seen.set(base, count + 1);
-		return count === 0 ? base : `${base}-${count}`;
+		this.used.add(slug);
+		return slug;
 	}
 }

@@ -114,7 +114,7 @@ function containerRule(state: StateBlock, startLine: number, endLine: number, si
 
 	// An unclosed container runs to the end of the block, matching how
 	// markdown-it treats an unclosed code fence.
-	const contentEnd = closed ? nextLine : endLine;
+	const contentEnd = nextLine;
 
 	const oldParent = state.parentType;
 	const oldLineMax = state.lineMax;
@@ -152,7 +152,7 @@ function render(tokens: { info: string; content: string }[], idx: number, option
 		case 'mermaid':
 			// Mermaid reads textContent, so the source must be escaped. The
 			// diagram itself is rendered client-side by media/mermaid-init.js.
-			return `<div class="mermaid">\n${escape(token.content)}</div>\n`;
+			return `<div class="mermaid" data-azdown-src="${escape(token.content)}">\n${escape(token.content)}</div>\n`;
 
 		case 'video':
 			// Azure DevOps expects a pasted <iframe> embed here, so the content

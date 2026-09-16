@@ -23,7 +23,9 @@ interface AzdownApi {
 async function activate(): Promise<AzdownApi> {
 	const extension = vscode.extensions.getExtension<AzdownApi>(EXTENSION_ID);
 	assert.ok(extension, `extension ${EXTENSION_ID} is not installed in the test instance`);
-	return extension.activate();
+	const api = await extension.activate();
+	await vscode.commands.executeCommand('azdown.refresh');
+	return api;
 }
 
 /** The wiki opened as the workspace folder. */
@@ -108,14 +110,14 @@ suite('rendering through the preview pipeline', () => {
 		assert.ok(hrefs.length > 0, 'no relative page links were rendered');
 
 		for (const href of hrefs) {
-			const resolved = path.resolve(wikiRoot(), href);
+			const resolved = path.resolve(wikiRoot(), decodeURIComponent(href));
 			await vscode.workspace.fs.stat(vscode.Uri.file(resolved));
 		}
 	});
 
 	test('a page name with %2D keeps the escape when linked', async () => {
 		const html = await renderPage('Onboarding.md');
-		assert.match(html, /Azure%2DDevOps-Notes\.md/);
+		assert.match(html, /Azure%252DDevOps-Notes\.md/);
 	});
 });
 

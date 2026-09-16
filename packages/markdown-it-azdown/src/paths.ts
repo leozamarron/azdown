@@ -28,9 +28,11 @@ export function dirname(p: string): string {
 export function relativePath(fromDir: string, toPath: string): string {
 	const from = fromDir.replace(/\\/g, '/').replace(/\/+$/, '').split('/');
 	const to = toPath.replace(/\\/g, '/').split('/');
+	const windows = /^[a-z]:/i.test(fromDir) || /^[\\/]{2}/.test(fromDir);
+	const comparable = (part: string): string => windows ? part.toLowerCase() : part;
 
 	let i = 0;
-	while (i < from.length && i < to.length && from[i] === to[i]) {
+	while (i < from.length && i < to.length && comparable(from[i]) === comparable(to[i])) {
 		i++;
 	}
 
@@ -41,4 +43,21 @@ export function relativePath(fromDir: string, toPath: string): string {
 	// leading "." would misread a dot-directory -- and ".attachments" is
 	// exactly the directory this function exists to reach.
 	return segments[0] === '..' ? rel : `./${rel}`;
+}
+
+/** Encode a filesystem path for a URL, including literal % escapes in names. */
+export function pathToHref(file: string): string {
+	return file.replace(/\\/g, '/').split('/').map(encodeURIComponent).join('/');
+}
+
+/** Segment-aware containment, shared with hosts that do not use node:path. */
+export function isWithinRoot(root: string, file: string): boolean {
+	const windows = /^[a-z]:/i.test(root) || /^[\\/]{2}/.test(root);
+	const normalise = (value: string): string => {
+		const normal = value.replace(/\\/g, '/').replace(/\/+$/, '');
+		return windows ? normal.toLowerCase() : normal;
+	};
+	const base = normalise(root);
+	const target = normalise(file);
+	return target === base || target.startsWith(`${base}/`);
 }
