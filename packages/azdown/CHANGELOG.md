@@ -49,6 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   keeps the double hyphen, so collapsing it broke anchors for any heading with
   punctuation between two spaces.
 
+### Deliberately not implemented
+
+- `#123` work item and `!456` pull request chips. Microsoft documents `#` as an
+  editor affordance that inserts an ordinary link, not a rendering rule, and
+  `!456` does not appear in the documentation at all. A blanket rule would turn
+  colour hex codes and numbers in prose into chips.
+
 ### Known limitations
 
 - KaTeX, `:shortcode:` emoji, `#123` / `!456` reference chips and relative wiki

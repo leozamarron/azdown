@@ -27,7 +27,7 @@ already on your disk.
 | KaTeX | TODO |
 | `:shortcode:` emoji | Implemented |
 | Relative wiki links (`%2D` escaping) | Implemented |
-| `#123` / `!456` ref chips | TODO |
+| `#123` / `!456` ref chips | Not implemented — see the extension README |
 | Azure DevOps styling | Implemented — theme-aware, light and dark |
 
 ## Development

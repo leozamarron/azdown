@@ -59,7 +59,6 @@ The wiki root is detected automatically from `.order` files. Override it with
 Being honest about scope:
 
 - KaTeX rendering (`$…$`, `$$…$$`, and the body of `::: math`)
-- `#123` / `!456` reference chips
 - Page-name completion and broken-link warnings while editing
 
 ## Settings

@@ -37,8 +37,6 @@ export interface AzdownOptions {
 	emoji?: boolean;
 	/** Relative wiki links, including Azure DevOps's `%2D` escaping. */
 	wikiLinks?: boolean;
-	/** `#123` work item and `!456` pull request refs, rendered as chips. */
-	refs?: boolean;
 
 	/**
 	 * Supplies the wiki context a lone Markdown file cannot carry: the wiki
@@ -57,8 +55,7 @@ const defaults: Required<Omit<AzdownOptions, 'wiki'>> = {
 	headingAnchors: true,
 	math: true,
 	emoji: true,
-	wikiLinks: true,
-	refs: true
+	wikiLinks: true
 };
 
 /**
@@ -66,6 +63,19 @@ const defaults: Required<Omit<AzdownOptions, 'wiki'>> = {
  *
  * Framework-agnostic on purpose: this package knows nothing about VS Code, so
  * a CLI or a browser extension can reuse it unchanged.
+ */
+/*
+ * Deliberately absent: `#123` work item and `!456` pull request chips.
+ *
+ * Microsoft documents `#` as an authoring affordance in the Azure DevOps
+ * editor -- "enter # followed by a work item ID, and then select the work item
+ * from the list", and the escape note is about avoiding "auto suggestions"
+ * while typing. What that flow stores in the file is an ordinary link, which
+ * already renders. Nothing documents a bare `#123` in a saved page becoming a
+ * chip, and `!456` does not appear in the documentation at all.
+ *
+ * Implementing it anyway would cost fidelity rather than add it: `#123456` is
+ * a colour hex, and "#404" is a number in prose. Both would become chips.
  */
 export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 	const opts = { ...defaults, ...options };
@@ -103,10 +113,6 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 	// links are still missing. Those are editor language features rather than
 	// rendering, so they belong in the extension, not here.
 
-	// TODO(refs): `#123` work items and `!456` pull requests as styled chips.
-	// Render-only by design: no PAT, no org connection, so a chip shows the ref
-	// itself and never resolves a title.
-	void opts.refs;
 }
 
 export default azdown;

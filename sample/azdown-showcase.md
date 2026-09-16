@@ -153,12 +153,16 @@ distintas.
 
 ---
 
-## 7. Referencias — PENDIENTE
+## 7. Referencias a work items — NO IMPLEMENTADO A PROPÓSITO
 
-Work item #123 y pull request !456 deben verse como chips.
+Work item #123, pull request !456, color hex #123456, error #404.
 
-Render-only: nunca se pide un PAT ni se conecta a la organización, así que el
-chip muestra la referencia y jamás resuelve el título.
+Los cuatro deben quedar como **texto plano**. En Azure DevOps el `#` es una
+ayuda del editor (autosuggest) que inserta un enlace normal en el archivo; no
+hay nada que documente que un `#123` guardado se convierta en chip. Y `!456` no
+aparece en la documentación.
+
+Convertirlos automáticamente rompería los dos últimos casos de esta línea.
 
 ---
 
