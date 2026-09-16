@@ -5,6 +5,7 @@ import { anchorsPlugin } from './anchors.js';
 import { imagesPlugin } from './images.js';
 import { linksPlugin } from './links.js';
 import { emojiPluginAzdown } from './emoji.js';
+import { mathPlugin } from './math.js';
 import type { WikiProvider } from './wiki.js';
 
 export { slugify, SlugBuilder } from './slug.js';
@@ -14,6 +15,7 @@ export { anchorsPlugin } from './anchors.js';
 export { imagesPlugin } from './images.js';
 export { linksPlugin } from './links.js';
 export { emojiPluginAzdown } from './emoji.js';
+export { mathPlugin } from './math.js';
 export { relativePath, dirname, documentPath } from './paths.js';
 export { pageTitle, pageFileName, ATTACHMENTS_PREFIX } from './wiki.js';
 export type { WikiProvider, SubpageEntry } from './wiki.js';
@@ -91,9 +93,9 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 		}
 	}
 
-	// TODO(katex): inline `$...$` and block `$$...$$`, plus the `::: math`
-	// container body, which containers.ts currently emits verbatim.
-	void opts.math;
+	if (opts.math) {
+		mathPlugin(md);
+	}
 
 	if (opts.emoji) {
 		emojiPluginAzdown(md);

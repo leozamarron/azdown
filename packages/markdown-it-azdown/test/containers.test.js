@@ -25,10 +25,10 @@ test('a ```mermaid code fence stays an ordinary code block', () => {
 	assert.doesNotMatch(html, /class="mermaid"/);
 });
 
-test('::: math emits a placeholder box pending KaTeX', () => {
+test('::: math renders through KaTeX', () => {
 	const html = render('::: math\nx^2\n:::\n');
-	assert.match(html, /<div class="azdown-math" data-azdown-pending="katex">/);
-	assert.match(html, /x\^2/);
+	assert.match(html, /<div class="azdown-math">/);
+	assert.match(html, /class="katex"/);
 });
 
 test('::: video passes the embed through when HTML is enabled', () => {
