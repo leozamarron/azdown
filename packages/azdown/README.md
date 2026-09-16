@@ -23,7 +23,8 @@ files already on your disk.
 - **`::: video` and `::: math` containers.**
 - **`[[_TOC_]]`** — table of contents, nested by heading level.
 - **`[[_TOSP_]]`** — table of subpages, listing the real child pages.
-- **Heading anchors** using Azure DevOps's slug algorithm.
+- **Heading anchors** following the slug algorithm Microsoft documents,
+  including its one published worked example.
 - **Azure DevOps styling** — type scale, heading rules, bordered tables and the
   boxed table of contents, all drawn from your VS Code theme so light, dark and
   high-contrast each look right.
@@ -75,12 +76,15 @@ Being honest about scope:
 
 ## Known limitations
 
-The heading slug algorithm is best-effort. Azure DevOps does not document how
-it derives anchors, so headings containing punctuation, non-Latin scripts,
-leading digits or emoji may not match a live wiki exactly. If you hit a
-mismatch, [open an issue](https://github.com/leozamarron/azdown/issues) with the
-heading and the anchor Azure DevOps generated — that is the fastest way to get
-it fixed.
+Heading anchors match the algorithm Microsoft documents, and its one published
+example. The documentation stops short of specifying what happens to non-Latin
+scripts, emoji, or punctuation left stranded at the end of a heading, so those
+may still differ from a live wiki. If you hit a mismatch,
+[open an issue](https://github.com/leozamarron/azdown/issues) with the heading
+and the anchor Azure DevOps generated — that is the fastest way to close one.
+
+`::: math` is supported but is not documented Azure DevOps syntax; Microsoft
+documents `$…$` and `$$…$$` instead. Those are not implemented yet.
 
 ## License
 

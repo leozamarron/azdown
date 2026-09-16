@@ -110,6 +110,12 @@ Dos encabezados iguales: el segundo debe recibir `overview-1`.
 
 Estos cuatro son justo los casos dudosos. Compáralos contra un wiki real.
 
+#### Team #1 : Release Wiki!
+
+Este es el **único ejemplo resuelto que publica Microsoft**. El ancla tiene que
+ser exactamente `#team-1--release-wiki`, con el guion doble. Comprueba que este
+enlace salta aquí: [Visit the Project Wiki](#team-1--release-wiki).
+
 ---
 
 ## 4. KaTeX — PENDIENTE

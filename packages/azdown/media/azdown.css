@@ -232,6 +232,16 @@ pre > code {
 	background: var(--azdown-subtle);
 }
 
+/*
+ * Azure DevOps labels these tables: "Contents" and "Child Pages". The wording
+ * is documented; the weight and spacing here are ours.
+ */
+.azdown-toc-title,
+.azdown-tosp-title {
+	margin: 0 0 0.4em;
+	font-weight: 600;
+}
+
 .azdown-toc ul {
 	margin: 0;
 	padding-left: 1.25em;

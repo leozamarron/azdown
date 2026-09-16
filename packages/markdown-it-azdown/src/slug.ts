@@ -1,14 +1,23 @@
 /**
  * Azure DevOps Wiki heading-slug algorithm.
  *
- * !! FIDELITY WARNING !!
- * Azure DevOps does not document how it derives heading anchors, and this
- * implementation was NOT validated against a live wiki. The cases covered by
- * passing tests in test/slug.test.js are the ones we are confident about
- * (case folding, spaces, de-duplication); everything else -- punctuation,
- * non-Latin scripts, leading digits, emoji in headings -- is marked as a
- * `todo` test rather than asserted, so nobody mistakes a guess for a verified
- * behaviour. Resolve those against a real Azure DevOps page before release.
+ * Microsoft documents the rules, and -- more usefully -- gives one worked
+ * example, which is the only hard evidence available:
+ *
+ *   #### Team #1 : Release Wiki!   ->   #team-1--release-wiki
+ *
+ * That example settles a question the prose gets wrong. The docs say special
+ * characters are "converted to hyphens", but converting them would give
+ * `team--1---release-wiki-`; the published anchor only makes sense if
+ * punctuation is *removed* and every space becomes a hyphen. Note the double
+ * hyphen: it is what is left where `:` stood between two spaces, and it
+ * survives into the anchor. Nothing collapses it.
+ *
+ * Anything the example does not exercise stays a `todo` test in
+ * test/slug.test.js rather than an assertion, so a guess never gets recorded
+ * as a guarantee.
+ *
+ * Source: https://learn.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance
  */
 
 /**
@@ -18,27 +27,24 @@
  * problem, because uniqueness is per-document. Use {@link SlugBuilder}.
  */
 export function slugify(text: string): string {
-	return text
-		.trim()
-		.toLowerCase()
-		// Whitespace runs collapse to a single dash.
-		.replace(/\s+/g, '-')
-		// Keep Unicode letters/numbers, dashes and underscores; drop the rest.
-		.replace(/[^\p{L}\p{N}\-_]/gu, '')
-		// Stripping punctuation can leave dash runs and dangling edges behind:
-		// "C# Guide !" would otherwise slug to "c-guide-". No slug scheme emits
-		// those, so collapsing them is a safe normalisation rather than a guess
-		// about Azure DevOps -- what Azure DevOps does with the *punctuation*
-		// itself is the open question, and stays a todo test.
-		.replace(/-{2,}/g, '-')
-		.replace(/^-+|-+$/g, '');
+	return (
+		text
+			.trim()
+			.toLowerCase()
+			// Every space becomes its own hyphen. Collapsing runs here would
+			// erase the double hyphen the documented example depends on.
+			.replace(/\s/g, '-')
+			// Punctuation is dropped, not converted. Unicode letters and numbers
+			// survive, as do hyphens and underscores.
+			.replace(/[^\p{L}\p{N}\-_]/gu, '')
+	);
 }
 
 /**
  * Generates slugs for one document, appending `-1`, `-2`, ... to repeats.
  *
  * Azure DevOps does de-duplicate repeated headings; the exact suffix format is
- * assumed, not verified.
+ * assumed, not verified -- the documentation does not cover it.
  */
 export class SlugBuilder {
 	private readonly seen = new Map<string, number>();
