@@ -1,6 +1,6 @@
 {
   "name": "markdown-it-azdown",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "markdown-it plugin that renders Markdown the way Azure DevOps Wiki does.",
   "license": "MIT",
   "keywords": [
