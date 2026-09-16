@@ -76,6 +76,12 @@ Being honest about scope:
 | --- | --- |
 | `azdown: Choose Wiki Folder` | Pick the wiki root manually |
 | `azdown: Refresh Wiki Tree` | Re-detect and reload the page tree |
+| `azdown: New Page` | Create a page at the wiki root and update `.order` |
+
+Each page's context menu also offers **Edit Page**, **Open Preview to the
+Side**, **Copy Wiki Link**, and **New Subpage**. Changes to `.order` refresh
+open previews as well as the tree, including for a selected wiki outside the
+workspace.
 
 ## Known limitations
 

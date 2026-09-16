@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'node:path';
 import { listPages, type WikiRoot } from './wiki.js';
 
 /**
@@ -20,6 +21,7 @@ export class PageItem extends vscode.TreeItem {
 			childrenDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None
 		);
 		this.resourceUri = vscode.Uri.file(file);
+		this.id = this.resourceUri.toString();
 		// Keep the display title: without this VS Code would show the file name.
 		this.label = title;
 		this.iconPath = new vscode.ThemeIcon('file');
@@ -55,6 +57,11 @@ export class WikiTreeProvider implements vscode.TreeDataProvider<PageItem> {
 		this.changed.fire(undefined);
 	}
 
+	dispose(): void {
+		this.items.clear();
+		this.changed.dispose();
+	}
+
 	getTreeItem(element: PageItem): vscode.TreeItem {
 		return element;
 	}
@@ -65,6 +72,10 @@ export class WikiTreeProvider implements vscode.TreeDataProvider<PageItem> {
 			return [];
 		}
 		return listPages(dir).map((page) => {
+			const known = this.items.get(page.file);
+			if (known) {
+				return known;
+			}
 			const item = new PageItem(page.file, page.title, page.childrenDir, element);
 			this.items.set(page.file, item);
 			return item;
@@ -96,7 +107,7 @@ export class WikiTreeProvider implements vscode.TreeDataProvider<PageItem> {
 					return item;
 				}
 				// Only descend where the target could actually live.
-				if (item.childrenDir && file.startsWith(`${item.childrenDir}/`)) {
+				if (item.childrenDir && file.startsWith(`${item.childrenDir}${path.sep}`)) {
 					return walk(item);
 				}
 			}

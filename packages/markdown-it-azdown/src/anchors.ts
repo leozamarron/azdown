@@ -36,7 +36,7 @@ export function plainText(inline: Token | undefined): string {
 	for (const child of inline.children) {
 		// `emoji` is included to match VS Code's own heading slugifier, which
 		// flattens text, emoji and code spans and nothing else.
-		if (child.type === 'text' || child.type === 'code_inline' || child.type === 'emoji') {
+		if (child.type === 'text' || child.type === 'code_inline' || child.type === 'emoji' || child.type === 'azdown_escaped_colon') {
 			out += child.content;
 		}
 	}
@@ -79,6 +79,7 @@ export function anchorsPlugin(md: MarkdownIt): void {
 			const level = Number(open.tag.slice(1));
 
 			headings.push({ level, text, slug });
+			open.meta = { ...open.meta, azdownHeading: { level, text, slug } };
 
 			if (!inline?.children) {
 				continue;

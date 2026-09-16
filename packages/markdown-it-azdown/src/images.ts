@@ -1,7 +1,7 @@
 import type MarkdownIt from 'markdown-it';
 import { onBeforeRender, walkTokens, originalAttr, attrDelete } from './prerender.js';
 import { ATTACHMENTS_PREFIX, type WikiProvider } from './wiki.js';
-import { documentPath, dirname, relativePath } from './paths.js';
+import { documentPath, dirname, relativePath, pathToHref, isWithinRoot } from './paths.js';
 
 /**
  * Rewrites Azure DevOps attachment links so the preview can find them.
@@ -30,13 +30,17 @@ export function imagesPlugin(md: MarkdownIt, wiki: WikiProvider): void {
 			if (!original?.startsWith(ATTACHMENTS_PREFIX)) {
 				return;
 			}
-			if (!root || !docPath) {
+			token.attrSet('src', original);
+			attrDelete(token, 'data-src');
+			if (!root || !docPath || !isWithinRoot(root, docPath)) {
 				// No wiki context: leave the author's path exactly as written.
 				return;
 			}
 
-			const absolute = `${root.replace(/\/+$/, '')}${original}`;
-			token.attrSet('src', relativePath(dirname(docPath), absolute));
+			// The root is a filesystem path; the source suffix is already a URL.
+			const attachments = `${root.replace(/[\\/]+$/, '')}/.attachments`;
+			const folder = pathToHref(relativePath(dirname(docPath), attachments));
+			token.attrSet('src', `${folder}/${original.slice(ATTACHMENTS_PREFIX.length)}`);
 			// Force VS Code to resolve the new value; it skips any image that
 			// already carries a data-src from a previous render.
 			attrDelete(token, 'data-src');

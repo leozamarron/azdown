@@ -15,7 +15,7 @@
     "compile": "npm run build:plugin && npm run compile --workspace packages/azdown",
     "check-types": "npm run build:plugin && npm run check-types --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspace packages/markdown-it-azdown",
+    "test": "npm run test --workspace packages/markdown-it-azdown && npm run test:unit --workspace packages/azdown",
     "test:vscode": "npm run test --workspace packages/azdown"
   },
   "overrides": {

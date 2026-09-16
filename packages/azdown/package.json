@@ -185,6 +185,7 @@
     "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.preview.json",
     "lint": "eslint src",
     "test": "vscode-test",
+    "test:unit": "node --test test/*.test.cjs",
     "package:vsix": "npm run package && npx --yes @vscode/vsce package --no-dependencies",
     "publish:marketplace": "npm run package && npx --yes @vscode/vsce publish --no-dependencies"
   },

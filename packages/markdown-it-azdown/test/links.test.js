@@ -81,7 +81,7 @@ test('relative links climb out of a nested page', () => {
 test('%2D is preserved, because it is part of the file name', () => {
 	// "A-B" and "A%2DB" are different pages in Azure DevOps; decoding the
 	// escape here would make the link point at a page that does not exist.
-	assert.equal(hrefOf('[x](/Azure%2DDevOps-Notas)'), './Azure%2DDevOps-Notas.md');
+	assert.equal(hrefOf('[x](/Azure%2DDevOps-Notas)'), './Azure%252DDevOps-Notas.md');
 });
 
 test('a link that already names the .md file still resolves', () => {

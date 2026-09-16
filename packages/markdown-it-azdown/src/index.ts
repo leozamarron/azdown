@@ -16,7 +16,7 @@ export { imagesPlugin } from './images.js';
 export { linksPlugin } from './links.js';
 export { emojiPluginAzdown } from './emoji.js';
 export { mathPlugin } from './math.js';
-export { relativePath, dirname, documentPath } from './paths.js';
+export { relativePath, dirname, documentPath, pathToHref } from './paths.js';
 export { pageTitle, pageFileName, ATTACHMENTS_PREFIX } from './wiki.js';
 export type { WikiProvider, SubpageEntry } from './wiki.js';
 
@@ -86,6 +86,14 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 		containersPlugin(md);
 	}
 
+	if (opts.math) {
+		mathPlugin(md);
+	}
+
+	if (opts.emoji) {
+		emojiPluginAzdown(md);
+	}
+
 	// The TOC links to heading ids, so it needs the anchor pass regardless of
 	// whether anchors were requested on their own.
 	if (opts.headingAnchors || opts.toc) {
@@ -101,14 +109,6 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 		if (opts.wikiLinks) {
 			linksPlugin(md, options.wiki);
 		}
-	}
-
-	if (opts.math) {
-		mathPlugin(md);
-	}
-
-	if (opts.emoji) {
-		emojiPluginAzdown(md);
 	}
 
 	// TODO(wiki-links): completions for page names and diagnostics for broken
