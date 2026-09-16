@@ -1,6 +1,6 @@
 import type MarkdownIt from 'markdown-it';
-import type { Token } from './types.js';
 import { relativePath, documentPath, dirname } from './paths.js';
+import { onBeforeRender, walkTokens, originalAttr } from './prerender.js';
 import { slugify } from './slug.js';
 import type { WikiProvider } from './wiki.js';
 
@@ -63,57 +63,49 @@ function isExternal(path: string): boolean {
  * survives being opened locally: the preview resolves the leading slash
  * against the workspace folder, and a path with no extension matches no file.
  *
- * !! Why this is a core rule and not a renderer rule !!
- * VS Code wraps `renderer.rules.link_open` and resolves the href itself before
- * delegating, exactly as it does for images. A renderer rule of ours would
- * only ever see an already-resolved path.
+ * !! Why this runs from onBeforeRender and not a core rule !!
+ * A core rule runs during tokenization, and VS Code tokenizes with an env
+ * whose `currentDocument` is explicitly undefined. See prerender.ts.
  */
 export function linksPlugin(md: MarkdownIt, wiki: WikiProvider): void {
-	md.core.ruler.push('azdown_wiki_links', (state) => {
-		const docPath = documentPath(state.env);
+	onBeforeRender(md, (tokens, env) => {
+		const docPath = documentPath(env);
 		if (!docPath) {
 			return;
 		}
 
-		const walk = (tokens: Token[]): void => {
-			for (const token of tokens) {
-				if (token.children?.length) {
-					walk(token.children);
-				}
-				if (token.type !== 'link_open') {
-					continue;
-				}
-
-				const href = token.attrGet('href');
-				if (!href || isExternal(href)) {
-					continue;
-				}
-
-				const { path, fragment } = splitTarget(href);
-				const anchor = normaliseFragment(fragment);
-
-				// A bare `#heading` stays on this page; only the anchor needs
-				// normalising so it matches what the anchor pass emitted.
-				if (path === '') {
-					if (anchor !== '') {
-						token.attrSet('href', `#${anchor}`);
-					}
-					continue;
-				}
-
-				const target = wiki.resolveLink?.(docPath, path);
-				if (!target) {
-					// Unresolvable: leave it exactly as the author wrote it. A
-					// rewritten-but-wrong link is harder to debug than an
-					// untouched one, and diagnostics are a separate feature.
-					continue;
-				}
-
-				const rel = relativePath(dirname(docPath), target);
-				token.attrSet('href', anchor === '' ? rel : `${rel}#${anchor}`);
+		walkTokens(tokens, (token) => {
+			if (token.type !== 'link_open') {
+				return;
 			}
-		};
 
-		walk(state.tokens);
+			const href = originalAttr(token, 'href');
+			if (!href || isExternal(href)) {
+				return;
+			}
+
+			const { path, fragment } = splitTarget(href);
+			const anchor = normaliseFragment(fragment);
+
+			// A bare `#heading` stays on this page; only the anchor needs
+			// normalising so it matches what the anchor pass emitted.
+			if (path === '') {
+				if (anchor !== '') {
+					token.attrSet('href', `#${anchor}`);
+				}
+				return;
+			}
+
+			const target = wiki.resolveLink?.(docPath, path);
+			if (!target) {
+				// Unresolvable: leave it exactly as the author wrote it. A
+				// rewritten-but-wrong link is harder to debug than an untouched
+				// one, and diagnostics are a separate feature.
+				return;
+			}
+
+			const rel = relativePath(dirname(docPath), target);
+			token.attrSet('href', anchor === '' ? rel : `${rel}#${anchor}`);
+		});
 	});
 }
