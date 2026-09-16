@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   keeping Ctrl+K V, scroll sync and theme integration.
 - `::: mermaid`, `::: video` and `::: math` three-colon containers. Backtick
   code fences are left as code blocks, matching Azure DevOps.
+- Mermaid diagrams are rendered in the preview, following the editor theme and
+  re-drawing when it changes. A malformed diagram reports its error in place
+  without affecting the others on the page.
 - `[[_TOC_]]` table of contents, nested by heading level.
 - `[[_TOSP_]]` table of subpages, listing real child pages when a wiki root is
   known.
@@ -25,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Known limitations
 
-- Mermaid containers are parsed but the diagram is not rendered yet.
 - KaTeX, `:shortcode:` emoji, `#123` / `!456` reference chips and relative wiki
   links are not implemented.
 - Azure DevOps visual styling is not implemented.

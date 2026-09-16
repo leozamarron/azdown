@@ -28,29 +28,45 @@ const esbuildProblemMatcherPlugin = {
 };
 
 async function main() {
-	const ctx = await esbuild.context({
-		entryPoints: [
-			path.join(pkgRoot, 'src/extension.ts')
-		],
+	const common = {
 		bundle: true,
-		format: 'cjs',
 		minify: production,
 		sourcemap: !production,
 		sourcesContent: false,
-		platform: 'node',
-		outfile: path.join(pkgRoot, 'dist/extension.js'),
-		external: ['vscode'],
 		logLevel: 'silent',
-		plugins: [
-			/* add to the end of plugins array */
-			esbuildProblemMatcherPlugin,
-		],
-	});
+		plugins: [esbuildProblemMatcherPlugin],
+	};
+
+	const targets = [
+		{
+			// The extension host: Node, CommonJS, with the vscode API provided
+			// by the runtime rather than bundled.
+			...common,
+			entryPoints: [path.join(pkgRoot, 'src/extension.ts')],
+			format: 'cjs',
+			platform: 'node',
+			outfile: path.join(pkgRoot, 'dist/extension.js'),
+			external: ['vscode'],
+		},
+		{
+			// The preview webview: browser, IIFE, everything inlined. The
+			// preview runs under a strict CSP that blocks external scripts, so
+			// Mermaid has to travel inside this bundle -- there is no CDN option.
+			...common,
+			entryPoints: [path.join(pkgRoot, 'src/preview/mermaid.ts')],
+			format: 'iife',
+			platform: 'browser',
+			outfile: path.join(pkgRoot, 'dist/preview.js'),
+		},
+	];
+
+	const contexts = await Promise.all(targets.map((t) => esbuild.context(t)));
+
 	if (watch) {
-		await ctx.watch();
+		await Promise.all(contexts.map((c) => c.watch()));
 	} else {
-		await ctx.rebuild();
-		await ctx.dispose();
+		await Promise.all(contexts.map((c) => c.rebuild()));
+		await Promise.all(contexts.map((c) => c.dispose()));
 	}
 }
 
