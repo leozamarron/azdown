@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+# Publishing to the Marketplace is irreversible: a version number can never be
+# reused. Never let two runs race for the same one.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # needed to create the GitHub Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Guard before anything irreversible happens. Tagging v0.2.0 while the
+      # manifest still says 0.1.0 would publish 0.1.0 to the Marketplace and
+      # burn that number, with a release page claiming otherwise.
+      - name: Check the tag matches the manifest version
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          MANIFEST="$(node -p "require('./packages/azdown/package.json').version")"
+          if [ "$TAG" != "$MANIFEST" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match packages/azdown/package.json version $MANIFEST"
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "vsix=azdown-$TAG.vsix" >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+
+      - name: Verify esbuild native binary
+        run: |
+          test -x node_modules/@esbuild/linux-x64/bin/esbuild \
+            || { echo "::error::esbuild native binary missing -- check allowScripts in the root package.json"; exit 1; }
+
+      - run: npm run check-types
+      - run: npm run lint
+      - run: npm test
+
+      - name: Package VSIX
+        working-directory: packages/azdown
+        run: npx --yes @vscode/vsce package --no-dependencies --out "${{ steps.version.outputs.vsix }}"
+
+      # Publish the artifact we just built, rather than letting vsce rebuild.
+      # The bytes on the Marketplace and the bytes attached to the GitHub
+      # Release are then provably identical.
+      - name: Publish to the Visual Studio Marketplace
+        working-directory: packages/azdown
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::error::VSCE_PAT secret is not set"
+            exit 1
+          fi
+          npx --yes @vscode/vsce publish --no-dependencies --packagePath "${{ steps.version.outputs.vsix }}"
+
+      # Last, because it is the only step that is trivial to redo by hand if it
+      # fails. gh is preinstalled on the runner, so no third-party action ends
+      # up holding a token that can write to this repo.
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "packages/azdown/${{ steps.version.outputs.vsix }}" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "Marketplace: https://marketplace.visualstudio.com/items?itemName=leozamarron.azdown
+
+          See [CHANGELOG.md](https://github.com/leozamarron/azdown/blob/$GITHUB_REF_NAME/packages/azdown/CHANGELOG.md)."

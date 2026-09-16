@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch makes an in-flight run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # npm 11 does not run install scripts unless the package is listed in
+      # "allowScripts". If that ever stops taking effect, esbuild's native
+      # binary is silently missing and the build fails in a confusing way far
+      # from the cause -- so fail here, loudly, instead.
+      - name: Verify esbuild native binary
+        run: |
+          test -x node_modules/@esbuild/linux-x64/bin/esbuild \
+            || { echo "::error::esbuild native binary missing -- check allowScripts in the root package.json"; exit 1; }
+
+      - run: npm run check-types
+      - run: npm run lint
+
+      # Plugin unit tests: no VS Code, no display.
+      - run: npm test
+
+      - name: Package VSIX
+        working-directory: packages/azdown
+        run: npx --yes @vscode/vsce package --no-dependencies --out azdown.vsix
+
+      # Lets you install the exact build from a PR before merging it.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: azdown-vsix
+          path: packages/azdown/azdown.vsix
+          if-no-files-found: error
