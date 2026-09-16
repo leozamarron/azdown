@@ -21,6 +21,8 @@ files already on your disk.
   dark. A ```` ```mermaid ```` code fence stays a code block, just like in the
   real wiki.
 - **`::: video` and `::: math` containers.**
+- **KaTeX maths** — `$…$` inline and `$$…$$` block, rendered without asking
+  your preview to load anything extra. Prices like `$5 and $10` are left alone.
 - **`[[_TOC_]]`** — table of contents, nested by heading level.
 - **`[[_TOSP_]]`** — table of subpages, listing the real child pages.
 - **`:shortcode:` emoji** — the GitHub set Azure DevOps uses, without GitHub's
@@ -59,6 +61,8 @@ The wiki root is detected automatically from `.order` files. Override it with
 Being honest about scope:
 
 - KaTeX rendering (`$…$`, `$$…$$`, and the body of `::: math`)
+- `:shortcode:` emoji
+- `#123` / `!456` reference chips
 - Page-name completion and broken-link warnings while editing
 
 ## Settings
@@ -84,7 +88,7 @@ may still differ from a live wiki. If you hit a mismatch,
 and the anchor Azure DevOps generated — that is the fastest way to close one.
 
 `::: math` is supported but is not documented Azure DevOps syntax; Microsoft
-documents `$…$` and `$$…$$` instead. Those are not implemented yet.
+documents `$…$` and `$$…$$`, which are what you should prefer.
 
 ## License
 

@@ -26,6 +26,8 @@ already on your disk.
 | Heading anchors | Implemented; slug algorithm **unverified** against a live wiki |
 | KaTeX | TODO |
 | `:shortcode:` emoji | Implemented |
+| KaTeX | Implemented — inline and block |
+| `:shortcode:` emoji | TODO |
 | Relative wiki links (`%2D` escaping) | Implemented |
 | `#123` / `!456` ref chips | Not implemented — see the extension README |
 | Azure DevOps styling | Implemented — theme-aware, light and dark |

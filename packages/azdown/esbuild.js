@@ -1,5 +1,6 @@
 const esbuild = require("esbuild");
 const path = require("node:path");
+const fs = require("node:fs");
 
 // Anclado a __dirname: el build no depende del cwd desde el que se invoque.
 const pkgRoot = __dirname;
@@ -27,7 +28,38 @@ const esbuildProblemMatcherPlugin = {
 	},
 };
 
+/**
+ * Copies KaTeX's stylesheet and fonts into media/ so they ship in the VSIX.
+ *
+ * Only the woff2 files are taken. Every @font-face lists woff2 first and the
+ * browser stops at the first format it supports, so the woff and ttf copies
+ * never get requested -- carrying all three would quadruple the weight for
+ * fallbacks no supported VS Code will ever reach.
+ *
+ * Copied at build time rather than committed: they are vendored artefacts, and
+ * keeping them out of git means the version cannot drift from package.json.
+ */
+function copyKatexAssets() {
+	const from = path.dirname(require.resolve('katex/package.json'));
+	const to = path.join(pkgRoot, 'media/katex');
+
+	fs.mkdirSync(path.join(to, 'fonts'), { recursive: true });
+	fs.copyFileSync(path.join(from, 'dist/katex.min.css'), path.join(to, 'katex.min.css'));
+
+	let count = 0;
+	for (const file of fs.readdirSync(path.join(from, 'dist/fonts'))) {
+		if (file.endsWith('.woff2')) {
+			fs.copyFileSync(path.join(from, 'dist/fonts', file), path.join(to, 'fonts', file));
+			count++;
+		}
+	}
+	if (count === 0) {
+		throw new Error('no KaTeX woff2 fonts found -- maths would render as boxes');
+	}
+}
+
 async function main() {
+	copyKatexAssets();
 	const common = {
 		bundle: true,
 		minify: production,

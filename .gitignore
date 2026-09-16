@@ -3,3 +3,6 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+
+# vendored at build time from node_modules/katex
+packages/azdown/media/katex/

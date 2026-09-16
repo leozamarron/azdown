@@ -1,4 +1,5 @@
 import type MarkdownIt from 'markdown-it';
+import katex from 'katex';
 import type { StateBlock, RuleBlock, RenderRule } from './types.js';
 
 /*
@@ -162,9 +163,20 @@ function render(tokens: { info: string; content: string }[], idx: number, option
 				: `<div class="azdown-video">\n${escape(token.content)}</div>\n`;
 
 		case 'math':
-			// TODO(katex): render with KaTeX. Until then the source is emitted
-			// verbatim so nothing is lost, and the CSS pass can style the box.
-			return `<div class="azdown-math" data-azdown-pending="katex">\n${escape(token.content)}</div>\n`;
+			try {
+				return `<div class="azdown-math">\n${katex.renderToString(token.content.trim(), {
+					displayMode: true,
+					throwOnError: true
+				})}</div>\n`;
+			} catch (err) {
+				// Show KaTeX's own complaint rather than an empty box, and keep
+				// the source so nothing the author wrote is lost.
+				return (
+					`<div class="azdown-math" data-azdown-error="true">\n` +
+					`${escape(err instanceof Error ? err.message : String(err))}\n` +
+					`${escape(token.content)}</div>\n`
+				);
+			}
 
 		default:
 			return '';

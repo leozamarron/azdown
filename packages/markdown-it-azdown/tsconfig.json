@@ -10,7 +10,11 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "strict": true,
+    // katex ships declarations that reference DOM types. skipLibCheck keeps
+		// those out of our build without pulling the DOM lib into a package that
+		// must keep working in plain Node.
+		"skipLibCheck": true,
+		"strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,

@@ -118,15 +118,20 @@ enlace salta aquí: [Visit the Project Wiki](#team-1--release-wiki).
 
 ---
 
-## 4. KaTeX — PENDIENTE
+## 4. KaTeX — IMPLEMENTADO
 
-Inline: $E = mc^2$ y bloque:
+Inline pegado: $E = mc^2$ — y con espacios, como en el ejemplo de la
+documentación de Azure DevOps: $ A + B = C $
+
+Bloque:
 
 $$
 \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2}
 $$
 
-Hoy se ve el `$` literal.
+Los precios **no** deben convertirse: cuesta $5 y $10.
+
+Fórmula inválida, debe mostrar el error de KaTeX en su sitio: $\frac{roto$
 
 ---
 
