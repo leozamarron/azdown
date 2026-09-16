@@ -2,7 +2,7 @@
   "name": "azdown",
   "displayName": "azdown",
   "publisher": "leozamarron",
-  "description": "Renders Markdown in VS Code exactly like Azure DevOps Wiki does — syntax and styling.",
+  "description": "Preview your Azure DevOps wiki in VS Code the way it looks in the browser — diagrams, tables of contents, attachments and all.",
   "version": "0.0.1",
   "license": "MIT",
   "engines": {

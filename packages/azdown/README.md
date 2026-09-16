@@ -1,14 +1,16 @@
 # azdown
 
-Renders Markdown in VS Code exactly like Azure DevOps Wiki does — syntax and styling.
+Preview your Azure DevOps wiki in VS Code the way it looks in the browser.
 
-Extends VS Code's **built-in** Markdown preview, so <kbd>Ctrl</kbd>+<kbd>K</kbd>
-<kbd>V</kbd>, scroll sync and theme integration keep working. There is no
-separate preview window to learn.
+If you keep your wiki in a Git repo, you already know the gap: you open a page
+locally and the diagrams are raw text, the table of contents is literal
+`[[_TOC_]]`, and half the images are broken. azdown closes that gap, so you can
+read and write wiki pages without switching to the browser to check your work.
 
-**No credentials.** azdown never asks for a Personal Access Token and never
-contacts your organization. Work item and pull request references are styled
-locally, not resolved.
+It extends VS Code's **built-in** Markdown preview rather than adding another
+one, so <kbd>Ctrl</kbd>+<kbd>K</kbd> <kbd>V</kbd>, scroll sync and your theme
+all keep working exactly as you expect. Everything runs locally against the
+files already on your disk.
 
 ## Features
 
