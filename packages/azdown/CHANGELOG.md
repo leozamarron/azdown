@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `:shortcode:` emoji, using the GitHub set minus GitHub's custom emoji, which
   Azure DevOps documents as unsupported. A leading backslash escapes the
   conversion, as documented.
+- KaTeX maths: `$…$` inline, `$$…$$` block, and the body of `::: math`.
+  Rendered at parse time, so the preview gains a stylesheet and fonts but no
+  extra script. A malformed expression reports KaTeX's own error in place.
 - Azure DevOps styling for the preview: type scale, ruled headings, bordered
   tables, boxed table of contents, and states for unrendered math, empty
   subpage lists and diagrams that failed to parse. Every colour comes from a
@@ -57,4 +60,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   example. Cases the documentation does not specify — non-Latin scripts, emoji,
   trailing punctuation — remain unverified.
 - `::: math` is not documented Azure DevOps syntax; `$…$` and `$$…$$` are, and
-  are not implemented yet.
+  both now work.
