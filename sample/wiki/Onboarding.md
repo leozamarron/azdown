@@ -1,36 +1,36 @@
 # Onboarding
 
-Esta página tiene subpáginas. El macro de abajo debe listarlas de verdad
-(no el placeholder vacío) cuando azdown detecte la raíz del wiki.
+This page has subpages. The macro below should list them for real — not the
+empty placeholder — once azdown has found the wiki root.
 
 [[_TOSP_]]
 
-## Imagen adjunta
+## Attachment
 
-Ruta al estilo Azure DevOps, absoluta desde la raíz del wiki:
+An Azure DevOps style path, absolute from the wiki root:
 
-![Diagrama](/.attachments/diagrama.png)
+![Diagram](/.attachments/diagram.png)
 
-Si ves un cuadro azul, la reescritura de `/.attachments/` funciona. Si ves el
-icono de imagen rota, azdown no encontró la raíz del wiki.
+A blue square means the `/.attachments/` rewriting works. A broken image icon
+means azdown did not find the wiki root.
 
-## Índice
+## Contents
 
 [[_TOC_]]
 
-### Primer paso
+### First step
 
-### Segundo paso
+### Second step
 
-## Enlaces entre páginas
+## Links between pages
 
-Al estilo Azure DevOps: sin `.md`, y las absolutas desde la raíz del wiki.
+Azure DevOps style: no `.md`, and absolute paths resolved from the wiki root.
 
-- [Absoluta](/Build-And-Release)
-- [A subpágina](/Onboarding/Permisos)
-- [Relativa](./Onboarding/Guia-rapida)
-- [Con %2D](/Azure%2DDevOps-Notas)
-- [A un encabezado](/Build-And-Release#build-and-release)
-- [En esta página](#imagen-adjunta)
-- [Rota, se queda igual](/No-Existe)
-- [Externa](https://learn.microsoft.com/azure/devops/project/wiki/markdown-guidance)
+- [Absolute](/Build-And-Release)
+- [To a subpage](/Onboarding/Permissions)
+- [Relative](./Onboarding/Quick-Start)
+- [With %2D](/Azure%2DDevOps-Notes)
+- [To a heading](/Build-And-Release#build-and-release)
+- [On this page](#attachment)
+- [Broken, left as written](/Does-Not-Exist)
+- [External](https://learn.microsoft.com/azure/devops/project/wiki/markdown-guidance)

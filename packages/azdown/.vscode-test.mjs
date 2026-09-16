@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@vscode/test-cli';
 
-// Anclado al propio archivo, no al cwd: la suite corre igual desde la raíz
-// del monorepo que desde packages/azdown.
+// Anchored to this file rather than the cwd, so the suite runs the same from
+// the monorepo root as from packages/azdown.
 const here = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({

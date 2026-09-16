@@ -89,7 +89,7 @@ suite('rendering through the preview pipeline', () => {
 			/data-azdown-pending="subpages"/,
 			'subpage table is still a placeholder, so no wiki root was detected'
 		);
-		assert.match(html, /Guia rapida/);
+		assert.match(html, /Quick Start/);
 	});
 
 	test('attachment paths resolve to a file that exists on disk', async () => {
@@ -115,7 +115,7 @@ suite('rendering through the preview pipeline', () => {
 
 	test('a page name with %2D keeps the escape when linked', async () => {
 		const html = await renderPage('Onboarding.md');
-		assert.match(html, /Azure%2DDevOps-Notas\.md/);
+		assert.match(html, /Azure%2DDevOps-Notes\.md/);
 	});
 });
 
