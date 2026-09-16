@@ -1,10 +1,358 @@
 /*
- * Azure DevOps Wiki styling for the built-in Markdown preview.
+ * Azure DevOps Wiki styling for VS Code's built-in Markdown preview.
  *
- * TODO(styling-pass): deliberately empty for now. Styling is a separate pass
- * from syntax; this file exists so the `markdown.previewStyles` contribution
- * resolves to a real asset instead of 404-ing in the preview webview.
+ * Two rules govern everything here.
  *
- * It must stay theme-aware: the preview renders inside VS Code's own theme,
- * so colours belong on the --vscode-* custom properties rather than hardcoded.
+ * 1. Colour always comes from a --vscode-* variable. The preview renders
+ *    inside the user's theme, so hardcoding Azure DevOps's palette would look
+ *    correct in light themes and be unreadable in dark ones. What we borrow
+ *    from Azure DevOps is its *shape* -- type scale, spacing, borders -- and
+ *    the theme supplies the colour.
+ *
+ * 2. These styles load after the preview's own, so plain selectors win. No
+ *    !important, and no id selectors: anything that needs to beat this file
+ *    (a user's markdown.styles) still can.
+ *
+ * FIDELITY NOTE: measurements here are modelled on Azure DevOps's Fluent-based
+ * look, not copied from its stylesheet, which is not public. They are close,
+ * not exact. Anything that needs to match precisely should be checked against
+ * a real wiki page -- see the same warning in slug.ts.
  */
+
+:root {
+	/*
+	 * Azure DevOps sets Segoe UI. It ships with Windows and with Office, so on
+	 * Linux and macOS this falls through to the platform UI font -- the page
+	 * keeps Azure DevOps's proportions but not its exact letterforms. That is
+	 * the intended trade: shipping a webfont would add weight for a difference
+	 * most readers never notice.
+	 */
+	--azdown-font: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui,
+		'Ubuntu', 'Droid Sans', sans-serif;
+	--azdown-font-mono: var(--vscode-editor-font-family, 'Cascadia Mono', Consolas,
+		'Courier New', monospace);
+
+	--azdown-border: var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.35)));
+	--azdown-subtle: var(--vscode-textBlockQuote-background, rgba(128, 128, 128, 0.1));
+	--azdown-muted: var(--vscode-descriptionForeground, currentColor);
+	--azdown-accent: var(--vscode-textLink-foreground, #0078d4);
+
+	--azdown-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- page --- */
+
+body {
+	font-family: var(--azdown-font);
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+/*
+ * Azure DevOps renders wiki content in a measured column rather than full
+ * bleed. Capping the line length is the single change that most makes a
+ * preview read like the wiki instead of like a text file.
+ */
+body > *:not(pre) {
+	max-width: 900px;
+}
+
+/* ------------------------------------------------------------ headings --- */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-weight: 600;
+	line-height: 1.3;
+	margin: 1.6em 0 0.6em;
+}
+
+h1 { font-size: 2em; }
+h2 { font-size: 1.5em; }
+h3 { font-size: 1.25em; }
+h4 { font-size: 1.1em; }
+h5 { font-size: 1em; }
+h6 { font-size: 1em; color: var(--azdown-muted); }
+
+/* Azure DevOps rules off its top two heading levels. */
+h1,
+h2 {
+	padding-bottom: 0.3em;
+	border-bottom: 1px solid var(--azdown-border);
+}
+
+/* The first heading of a page should not push itself down. */
+body > h1:first-child,
+body > h2:first-child,
+body > h3:first-child {
+	margin-top: 0;
+}
+
+/*
+ * The anchor the plugin injects as a heading's first child. It must occupy no
+ * space at all, or every heading gains a stray gap.
+ *
+ * scroll-margin-top is the point of it: without it a heading jumped to from
+ * the table of contents lands flush against the top edge, with no context
+ * above it.
+ */
+.azdown-anchor {
+	display: inline;
+	scroll-margin-top: 1.5rem;
+}
+
+/* --------------------------------------------------------------- text --- */
+
+p,
+ul,
+ol,
+blockquote,
+table,
+pre {
+	margin: 0 0 1em;
+}
+
+li > ul,
+li > ol {
+	margin-bottom: 0;
+}
+
+li + li {
+	margin-top: 0.25em;
+}
+
+/*
+ * Set the colour explicitly rather than inheriting the preview's own link
+ * style. Leaving it unset means falling back to the browser default -- navy
+ * blue, and purple once visited -- which is unreadable on a dark background
+ * and ignores the theme entirely.
+ */
+a {
+	color: var(--azdown-accent);
+	text-decoration: none;
+}
+
+a:visited {
+	color: var(--azdown-accent);
+}
+
+a:hover,
+a:focus-visible {
+	color: var(--vscode-textLink-activeForeground, var(--azdown-accent));
+	text-decoration: underline;
+}
+
+hr {
+	height: 1px;
+	border: 0;
+	background: var(--azdown-border);
+	margin: 2em 0;
+}
+
+blockquote {
+	padding: 0.5em 1em;
+	border-left: 3px solid var(--azdown-accent);
+	background: var(--azdown-subtle);
+	color: inherit;
+}
+
+blockquote > :last-child {
+	margin-bottom: 0;
+}
+
+/* -------------------------------------------------------------- tables --- */
+
+table {
+	border-collapse: collapse;
+	/*
+	 * Azure DevOps sizes table columns to their content rather than stretching
+	 * to full width, which keeps two-column tables from looking sparse.
+	 */
+	width: auto;
+	max-width: 100%;
+	display: block;
+	overflow-x: auto;
+}
+
+th,
+td {
+	padding: 0.4em 0.9em;
+	border: 1px solid var(--azdown-border);
+	text-align: left;
+	vertical-align: top;
+}
+
+thead th {
+	background: var(--azdown-subtle);
+	font-weight: 600;
+}
+
+/* --------------------------------------------------------------- code --- */
+
+code {
+	font-family: var(--azdown-font-mono);
+	font-size: 0.9em;
+}
+
+/* Inline code only: a fenced block styles its <pre>, not the <code> inside. */
+:not(pre) > code {
+	padding: 0.15em 0.4em;
+	border-radius: var(--azdown-radius);
+	background: var(--vscode-textCodeBlock-background, var(--azdown-subtle));
+}
+
+pre {
+	padding: 0.9em 1em;
+	border: 1px solid var(--azdown-border);
+	border-radius: var(--azdown-radius);
+	background: var(--vscode-textCodeBlock-background, var(--azdown-subtle));
+	overflow-x: auto;
+}
+
+pre > code {
+	padding: 0;
+	background: none;
+	border: 0;
+}
+
+/* ------------------------------------------------- table of contents --- */
+
+/*
+ * Azure DevOps renders [[_TOC_]] as a bordered card, not as a bare list. The
+ * box is what signals "this is navigation, not content".
+ */
+.azdown-toc {
+	margin: 0 0 1.5em;
+	padding: 0.75em 1.25em;
+	border: 1px solid var(--azdown-border);
+	border-radius: var(--azdown-radius);
+	background: var(--azdown-subtle);
+}
+
+.azdown-toc ul {
+	margin: 0;
+	padding-left: 1.25em;
+	list-style: none;
+}
+
+.azdown-toc > ul {
+	padding-left: 0;
+}
+
+.azdown-toc li {
+	margin: 0.15em 0;
+}
+
+.azdown-tosp ul {
+	margin: 0 0 1em;
+	padding-left: 1.25em;
+}
+
+/*
+ * A [[_TOSP_]] with nothing to show, because no wiki root is known. Left
+ * visible but inert: collapsing it to nothing would look like the macro had
+ * been silently dropped.
+ */
+.azdown-tosp[data-azdown-pending]::before {
+	content: 'Subpages are listed once a wiki root is set.';
+	display: block;
+	padding: 0.5em 0.75em;
+	border: 1px dashed var(--azdown-border);
+	border-radius: var(--azdown-radius);
+	color: var(--azdown-muted);
+	font-size: 0.9em;
+}
+
+/* --------------------------------------------------------- containers --- */
+
+.mermaid {
+	margin: 0 0 1.5em;
+	text-align: center;
+	/* Until the diagram is drawn the element still holds its source text. */
+	overflow-x: auto;
+}
+
+.mermaid svg {
+	max-width: 100%;
+	height: auto;
+}
+
+/*
+ * A diagram Mermaid could not parse. The message is the parser's own, so it
+ * needs to read as an error rather than as page content.
+ */
+.mermaid[data-azdown-error] {
+	text-align: left;
+	white-space: pre-wrap;
+	padding: 0.75em 1em;
+	border: 1px solid var(--vscode-inputValidation-errorBorder, var(--azdown-border));
+	border-radius: var(--azdown-radius);
+	background: var(--vscode-inputValidation-errorBackground, var(--azdown-subtle));
+	font-family: var(--azdown-font-mono);
+	font-size: 0.85em;
+}
+
+.azdown-video {
+	margin: 0 0 1.5em;
+}
+
+/* Keeps a pasted 16:9 embed responsive without touching its markup. */
+.azdown-video iframe {
+	max-width: 100%;
+	aspect-ratio: 16 / 9;
+	height: auto;
+	border: 0;
+	border-radius: var(--azdown-radius);
+}
+
+/* Math whose KaTeX pass is not implemented yet: shown as source, marked as
+ * unrendered rather than pretending to be finished output. */
+.azdown-math[data-azdown-pending] {
+	margin: 0 0 1.5em;
+	padding: 0.75em 1em;
+	border: 1px dashed var(--azdown-border);
+	border-radius: var(--azdown-radius);
+	background: var(--azdown-subtle);
+	font-family: var(--azdown-font-mono);
+	font-size: 0.9em;
+	white-space: pre-wrap;
+}
+
+/* ------------------------------------------------------------- images --- */
+
+img {
+	max-width: 100%;
+	height: auto;
+}
+
+/* ---------------------------------------------------- task list items --- */
+
+/*
+ * Checklists are lists whose markers would otherwise sit beside a checkbox.
+ * :has() lets us drop the bullet without the renderer tagging the <li>.
+ */
+li:has(> input[type='checkbox']) {
+	list-style: none;
+	margin-left: -1.25em;
+}
+
+li > input[type='checkbox'] {
+	margin-right: 0.5em;
+}
+
+/* --------------------------------------------------- high contrast --- */
+
+/*
+ * High-contrast themes rely on real borders rather than tinted backgrounds,
+ * so the subtle fills above would flatten the page.
+ */
+body.vscode-high-contrast blockquote,
+body.vscode-high-contrast thead th,
+body.vscode-high-contrast .azdown-toc,
+body.vscode-high-contrast :not(pre) > code,
+body.vscode-high-contrast pre {
+	background: none;
+}

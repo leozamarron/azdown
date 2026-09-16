@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Wiki page tree in the activity bar, ordered by `.order` and showing Azure
   DevOps display titles.
 - `azdown.wikiRoot` setting, autodetected from `.order` files.
+- Azure DevOps styling for the preview: type scale, ruled headings, bordered
+  tables, boxed table of contents, and states for unrendered math, empty
+  subpage lists and diagrams that failed to parse. Every colour comes from a
+  --vscode-* variable, so light, dark and high-contrast themes all work.
 - Links between wiki pages resolve: the missing `.md` extension, root-absolute
   paths relative to the wiki, `%2D` in page names, and heading fragments.
   Unresolvable links are left untouched rather than rewritten to a guess.
@@ -35,5 +39,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - KaTeX, `:shortcode:` emoji, `#123` / `!456` reference chips and relative wiki
   links are not implemented.
-- Azure DevOps visual styling is not implemented.
 - The heading slug algorithm is not yet verified against a live wiki.

@@ -28,7 +28,7 @@ already on your disk.
 | `:shortcode:` emoji | TODO |
 | Relative wiki links (`%2D` escaping) | Implemented |
 | `#123` / `!456` ref chips | TODO |
-| Azure DevOps styling | TODO — separate pass |
+| Azure DevOps styling | Implemented — theme-aware, light and dark |
 
 ## Development
 

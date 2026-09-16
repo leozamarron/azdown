@@ -24,6 +24,9 @@ files already on your disk.
 - **`[[_TOC_]]`** — table of contents, nested by heading level.
 - **`[[_TOSP_]]`** — table of subpages, listing the real child pages.
 - **Heading anchors** using Azure DevOps's slug algorithm.
+- **Azure DevOps styling** — type scale, heading rules, bordered tables and the
+  boxed table of contents, all drawn from your VS Code theme so light, dark and
+  high-contrast each look right.
 - **Links between pages work.** Azure DevOps writes them without a `.md`
   extension and resolves root-absolute ones against the wiki, so locally they
   normally lead nowhere. Links to headings work too, and a link that resolves
@@ -53,7 +56,6 @@ Being honest about scope:
 - `:shortcode:` emoji
 - `#123` / `!456` reference chips
 - Page-name completion and broken-link warnings while editing
-- Azure DevOps visual styling
 
 ## Settings
 
