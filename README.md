@@ -47,12 +47,16 @@ Press <kbd>F5</kbd> to launch the Extension Development Host, then:
 - open the **Azure DevOps Wiki** panel in the activity bar, point it at
   `sample/wiki/`, and check the tree, `[[_TOSP_]]` and the attachment image.
 
-The VS Code integration suite is separate because it downloads VS Code and
-needs a display:
+The VS Code integration suite is separate because it boots a real VS Code and
+therefore needs a display:
 
 ```bash
-npm run test:vscode              # or: xvfb-run -a npm run test:vscode
+npm run test:vscode                    # on a desktop
+xvfb-run -a npm run test:vscode        # on a headless machine
 ```
+
+On Arch, `xvfb` comes from `xorg-server-xvfb`. Without a display the run hangs
+rather than failing, so it is not wired into `npm test`.
 
 ## License
 
