@@ -140,15 +140,12 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const root = picked[0].fsPath;
 
-			// Workspace settings only exist when a folder or .code-workspace is
-			// open. Fall back to the user profile so the picker still works in an
-			// empty window -- notably the Extension Development Host.
-			const target = vscode.workspace.workspaceFolders?.length
-				? vscode.ConfigurationTarget.Workspace
-				: vscode.ConfigurationTarget.Global;
-
-			log.appendLine(`[chooseWikiRoot] ${root} -> ${vscode.ConfigurationTarget[target]}`);
-			await vscode.workspace.getConfiguration('azdown').update('wikiRoot', root, target);
+			// A local wiki belongs to the user, not the open repository. Always
+			// share the selection across projects without writing workspace files.
+			log.appendLine(`[chooseWikiRoot] ${root} -> Global`);
+			await vscode.workspace.getConfiguration('azdown').update(
+				'wikiRoot', root, vscode.ConfigurationTarget.Global
+			);
 
 			await wiki.detect();
 			tree.refresh();

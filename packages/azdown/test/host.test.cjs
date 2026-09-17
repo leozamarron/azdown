@@ -17,7 +17,7 @@ const code = buildSync({
 	external: ['vscode', 'markdown-it-azdown']
 }).outputFiles[0].text;
 
-function fixture(t) {
+function fixture(t, userSettings) {
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'azdown-test-'));
 	const subscriptions = [];
 	t.after(() => {
@@ -36,17 +36,35 @@ function fixture(t) {
 	const uri = file => ({ fsPath: file, path: file.split(path.sep).join('/'), toString: () => pathToFileURL(file).href });
 	const noopEvent = () => ({ dispose() {} });
 	const commands = new Map();
-	const state = { root: dir, executed: [], opened: [], copied: '', errors: [], watchers: [], input: 'Child Page' };
+	const configurationChanged = new EventEmitter();
+	const settings = userSettings ?? { root: dir };
+	const state = {
+		get root() { return settings.root; },
+		set root(value) { settings.root = value; },
+		executed: [], opened: [], copied: '', errors: [], watchers: [], input: 'Child Page',
+		updates: [], orderFiles: [], configurationChanged
+	};
 	const vscode = {
 		EventEmitter, Uri: { file: uri },
+		ConfigurationTarget: { Global: 1, Workspace: 2, WorkspaceFolder: 3 },
 		TreeItem: class { constructor(label) { this.label = label; } },
 		ThemeIcon: class {}, TreeItemCollapsibleState: { None: 0, Collapsed: 1 },
 		RelativePattern: class { constructor(base, pattern) { this.baseUri = uri(base); this.pattern = pattern; } },
 		workspace: {
-			getConfiguration: () => ({ get: () => state.root }),
+			getConfiguration: () => ({
+				get: () => state.workspaceRoot ?? state.root,
+				inspect: () => ({ globalValue: state.root, workspaceValue: state.workspaceRoot }),
+				update: async (key, value, target) => {
+					state.updates.push({ key, value, target });
+					if (state.updateError) throw new Error(state.updateError);
+					assert.equal(target, vscode.ConfigurationTarget.Global, 'must never write repository settings');
+					settings.root = value;
+					configurationChanged.fire({ affectsConfiguration: section => section === 'azdown.wikiRoot' });
+				}
+			}),
 			getWorkspaceFolder: () => undefined,
-			findFiles: async () => [],
-			onDidChangeConfiguration: noopEvent, onDidChangeWorkspaceFolders: noopEvent,
+			findFiles: async () => state.orderFiles.map(uri),
+			onDidChangeConfiguration: configurationChanged.event, onDidChangeWorkspaceFolders: noopEvent,
 			createFileSystemWatcher: pattern => {
 				const create = new EventEmitter(), change = new EventEmitter(), remove = new EventEmitter();
 				const watcher = {
@@ -67,6 +85,7 @@ function fixture(t) {
 			onDidChangeActiveTextEditor: noopEvent,
 			showTextDocument: async target => { state.opened.push(target.fsPath); },
 			showInputBox: async () => state.input,
+			showOpenDialog: async () => state.picked ? [uri(state.picked)] : undefined,
 			showInformationMessage() {}, showWarningMessage() {},
 			showErrorMessage: message => { state.errors.push(message); }
 		},
@@ -86,6 +105,91 @@ function fixture(t) {
 	new Function('require', 'module', 'exports', code)(name => name === 'vscode' ? vscode : require(name), mod, mod.exports);
 	return { ...mod.exports, dir, state, vscode, subscriptions, uri };
 }
+
+for (const workspaceCount of [0, 1, 2]) {
+	test(`wiki picker saves globally with ${workspaceCount} workspace folders and ignores legacy project settings`, async t => {
+		const f = fixture(t);
+		f.vscode.workspace.workspaceFolders = workspaceCount
+			? Array.from({ length: workspaceCount }, (_, i) => ({ uri: f.uri(path.join(f.dir, `project-${i}`)) }))
+			: undefined;
+		f.state.workspaceRoot = f.dir;
+		f.state.picked = path.join(f.dir, 'Chosen Wiki');
+		f.createPage(f.state.picked, 'Chosen Page');
+		f.activate({ subscriptions: f.subscriptions });
+		await f.vscode.commands.executeCommand('azdown.chooseWikiRoot');
+		assert.deepEqual(f.state.updates, [{ key: 'wikiRoot', value: f.state.picked, target: f.vscode.ConfigurationTarget.Global }]);
+		assert.equal(f.state.tree.getChildren()[0].file, path.join(f.state.picked, 'Chosen-Page.md'));
+		assert.deepEqual(f.state.errors, []);
+	});
+}
+
+test('global wiki selection survives another project and configuration changes refresh existing windows', async t => {
+	const settings = {};
+	const first = fixture(t, settings);
+	const second = fixture(t, settings);
+	first.state.picked = path.join(first.dir, 'wiki');
+	first.createPage(first.state.picked, 'First');
+	first.activate({ subscriptions: first.subscriptions });
+	await first.vscode.commands.executeCommand('azdown.chooseWikiRoot');
+
+	second.state.workspaceRoot = second.dir;
+	second.vscode.workspace.workspaceFolders = [{ uri: second.uri(second.dir) }];
+	second.activate({ subscriptions: second.subscriptions });
+	await second.vscode.commands.executeCommand('azdown.refresh');
+	assert.equal(second.state.tree.getChildren()[0].file, path.join(first.state.picked, 'First.md'));
+
+	second.state.picked = path.join(second.dir, 'other-wiki');
+	second.createPage(second.state.picked, 'Second');
+	await second.vscode.commands.executeCommand('azdown.chooseWikiRoot');
+	first.state.executed.length = 0;
+	// VS Code broadcasts user-setting changes to other windows of the profile.
+	first.state.configurationChanged.fire({ affectsConfiguration: section => section === 'azdown.wikiRoot' });
+	await new Promise(resolve => setImmediate(resolve));
+	assert.equal(first.state.tree.getChildren()[0].file, path.join(second.state.picked, 'Second.md'));
+	assert.ok(first.state.executed.some(([id]) => id === 'markdown.preview.refresh'));
+	assert.deepEqual(first.state.errors, []);
+	assert.deepEqual(second.state.errors, []);
+});
+
+test('cancelling the wiki picker or failing to save preserves the current wiki', async t => {
+	const f = fixture(t);
+	const page = f.createPage(f.dir, 'Original');
+	f.activate({ subscriptions: f.subscriptions });
+	await f.vscode.commands.executeCommand('azdown.refresh');
+	await f.vscode.commands.executeCommand('azdown.chooseWikiRoot');
+	assert.deepEqual(f.state.updates, []);
+	f.state.picked = path.join(f.dir, 'different');
+	f.state.updateError = 'Settings cannot be saved';
+	await f.vscode.commands.executeCommand('azdown.chooseWikiRoot');
+	assert.equal(f.state.root, f.dir);
+	assert.equal(f.state.tree.getChildren()[0].file, page);
+	assert.deepEqual(f.state.errors, ['azdown: Settings cannot be saved']);
+});
+
+test('empty or relative user settings use autodetection without importing legacy workspace paths', async t => {
+	const f = fixture(t);
+	const detected = path.join(f.dir, 'detected');
+	f.createPage(detected, 'Page');
+	f.state.workspaceRoot = f.dir;
+	f.vscode.workspace.workspaceFolders = [{ uri: f.uri(f.dir) }];
+	f.state.orderFiles = [path.join(detected, '.order')];
+	const wiki = new f.WikiRoot({ appendLine() {} });
+	f.subscriptions.push(wiki);
+	for (const value of [undefined, '', 'detected']) {
+		f.state.root = value;
+		await wiki.detect();
+		assert.equal(wiki.root(), detected);
+	}
+	f.state.orderFiles = [];
+	await wiki.detect();
+	assert.equal(wiki.root(), undefined);
+	assert.deepEqual(f.state.updates, []);
+});
+
+test('wiki root is declared as a machine setting so repositories and Settings Sync cannot override it', () => {
+	const manifest = require('../package.json');
+	assert.equal(manifest.contributes.configuration.properties['azdown.wikiRoot'].scope, 'machine');
+});
 
 test('context commands edit, preview, copy and create under the selected page', async t => {
 	const f = fixture(t);

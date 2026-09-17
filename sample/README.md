@@ -59,12 +59,17 @@ Use **Edit Page** in the tree to open the Markdown source.
   use **Choose Wiki Folder** to select
   `sample/wiki`. The tree should populate even outside a workspace.
 - [ ] With a wiki selected outside the workspace, repeat the `.order` check.
+- [ ] Choose a wiki while a project is open, then open a different project in
+  the same VS Code profile. The selected wiki should stay the same. Neither
+  project's `.vscode/settings.json` or `.code-workspace` file should change.
+- [ ] Change the selected wiki in another window using the same profile. The
+  first window's tree and previews should update to the new selection.
 - [ ] Open `sample/outside-wiki.md` using **File: Open File** in the development
   host. Its root-absolute test image must not borrow the selected wiki's image.
 - [ ] Check light, dark and high-contrast themes. Tables, links, formulas and
   diagram errors should remain readable.
 
-Selecting a root without a workspace saves a user setting; clear
+Selecting a root always saves a local user setting; clear
 `azdown.wikiRoot` in that host's user settings when finished.
 
 ## Check the packaged extension

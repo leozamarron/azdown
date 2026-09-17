@@ -55,7 +55,14 @@ file cannot express:
   and new subpage — which creates the file and registers it in `.order` for you.
 
 The wiki root is detected automatically from `.order` files. Override it with
-`azdown.wikiRoot` or the folder picker in the panel.
+`azdown.wikiRoot` in User Settings or the folder picker in the panel. The chosen
+folder is shared across projects in the same VS Code profile on this machine.
+The picker never writes to `.vscode/settings.json` or a `.code-workspace` file,
+and the path is excluded from Settings Sync.
+
+If you used an earlier version, choose your wiki once to save it globally and
+remove any old `azdown.wikiRoot` entry from your project's settings. Workspace
+values are now ignored. Clear the user setting to return to automatic detection.
 
 ## Not yet implemented
 
@@ -69,7 +76,7 @@ Being honest about scope:
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `azdown.wikiRoot` | `""` | Folder to treat as the wiki root. Absolute, or relative to the first workspace folder. Empty means autodetect via `.order`. |
+| `azdown.wikiRoot` | `""` | Absolute wiki folder path in User Settings, shared across projects on this machine. Empty means autodetect via `.order`. |
 
 ## Commands
 
