@@ -143,7 +143,7 @@ export function listPages(dir: string): WikiPage[] {
 /**
  * Tracks which folder is the wiki root and tells everyone when it changes.
  *
- * Detection order: the `azdown.wikiRoot` setting wins, then the shallowest
+ * Detection order: the user's global `azdown.wikiRoot` wins, then the shallowest
  * folder containing a `.order` file, then nothing. "Nothing" is a legitimate
  * outcome -- the plugin degrades to leaving attachments and `[[_TOSP_]]` alone
  * rather than guessing a root and silently rewriting links to the wrong place.
@@ -280,15 +280,18 @@ export class WikiRoot implements WikiProvider {
 }
 
 async function fromSetting(): Promise<string | undefined> {
-	const configured = vscode.workspace.getConfiguration('azdown').get<string>('wikiRoot')?.trim();
+	// Ignore legacy workspace values: switching projects must not switch the
+	// user's chosen wiki, even when an old repository still contains its path.
+	const configured = vscode.workspace.getConfiguration('azdown')
+		.inspect<string>('wikiRoot')?.globalValue?.trim();
 	if (!configured) {
 		return undefined;
 	}
 	if (path.isAbsolute(configured)) {
 		return path.normalize(configured);
 	}
-	const folder = vscode.workspace.workspaceFolders?.[0];
-	return folder ? path.join(folder.uri.fsPath, configured) : undefined;
+	// A global path cannot be resolved relative to whichever project is open.
+	return undefined;
 }
 
 async function fromOrderFiles(): Promise<string | undefined> {

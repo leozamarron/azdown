@@ -167,7 +167,8 @@
         "azdown.wikiRoot": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Folder to treat as the Azure DevOps wiki root. Absolute, or relative to the first workspace folder. Leave empty to autodetect by looking for the shallowest folder containing a `.order` file."
+          "scope": "machine",
+          "markdownDescription": "Absolute path to the Azure DevOps wiki root, shared across projects in this VS Code profile. Saved only in user settings, never in a repository, and excluded from Settings Sync. Workspace values are ignored. Leave empty to autodetect by looking for the shallowest folder containing a `.order` file."
         }
       }
     }
