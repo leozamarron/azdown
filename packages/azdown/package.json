@@ -3,7 +3,7 @@
   "displayName": "azdown",
   "publisher": "leozamarron",
   "description": "Preview your Azure DevOps wiki in VS Code the way it looks in the browser — diagrams, tables of contents, attachments and all.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "engines": {
     "vscode": "^1.75.0",
