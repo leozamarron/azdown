@@ -20,6 +20,36 @@ type Kind = (typeof KINDS)[number];
 const COLON = 0x3a;
 const MIN_MARKERS = 3;
 
+function escapeHtml(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;');
+}
+
+/**
+ * The markup a Mermaid diagram gets, whichever syntax produced it.
+ *
+ * The source is kept in a data attribute because rendering replaces the
+ * element's contents, and the preview script needs the original to re-draw
+ * when the theme changes. The class is ours, not `mermaid`: VS Code's own
+ * Mermaid support owns that one and would fight us for the same elements.
+ *
+ * A `<pre>` rather than a `<div>`, for both syntaxes, because markdown-it only
+ * uses a `highlight` return verbatim when it starts with `<pre` -- anything
+ * else gets wrapped in `<pre><code>`. VS Code's implementation returns a
+ * `<pre>` for the same reason. Keeping the container on the same element means
+ * both syntaxes produce identical markup and share one stylesheet rule.
+ */
+function renderMermaid(source: string): string {
+	// A fence hands over a trailing newline and a container does not. Trimming
+	// makes the two syntaxes produce byte-identical markup, which is what the
+	// preview script and the stylesheet both assume.
+	const escaped = escapeHtml(source.replace(/\s+$/, ''));
+	return `<pre class="azdown-mermaid" data-azdown-src="${escaped}">${escaped}</pre>\n`;
+}
+
 function isKind(value: string): value is Kind {
 	return (KINDS as readonly string[]).includes(value);
 }
@@ -150,9 +180,7 @@ function render(tokens: { info: string; content: string }[], idx: number, option
 
 	switch (kind) {
 		case 'mermaid':
-			// Mermaid reads textContent, so the source must be escaped. The
-			// diagram itself is rendered client-side by media/mermaid-init.js.
-			return `<div class="mermaid" data-azdown-src="${escape(token.content)}">\n${escape(token.content)}</div>\n`;
+			return renderMermaid(token.content);
 
 		case 'video':
 			// Azure DevOps expects a pasted <iframe> embed here, so the content
@@ -183,7 +211,37 @@ function render(tokens: { info: string; content: string }[], idx: number, option
 	}
 }
 
-export function containersPlugin(md: MarkdownIt): void {
+/**
+ * Renders a ```mermaid fenced code block as a diagram.
+ *
+ * Azure DevOps documents BOTH forms -- "the `:::` container syntax with the
+ * `mermaid` keyword" and "a standard fenced code block with the `mermaid`
+ * language identifier" -- so treating the fence as ordinary code, which this
+ * plugin used to do deliberately, was wrong.
+ *
+ * Wraps `options.highlight`, which is where markdown-it lets a fence decide
+ * its own markup, and is also what VS Code's own Mermaid support hooks. When
+ * that support is present the host disables this via `mermaidFences: false`,
+ * so the two never render the same fence twice.
+ */
+function mermaidFences(md: MarkdownIt): void {
+	const previous = md.options.highlight;
+
+	md.set({
+		highlight: (code, lang, attrs) => {
+			if (lang.trim().toLowerCase() === 'mermaid') {
+				return renderMermaid(code);
+			}
+			return previous ? previous(code, lang, attrs) : '';
+		}
+	});
+}
+
+export function containersPlugin(md: MarkdownIt, options: { mermaidFences?: boolean } = {}): void {
+	if (options.mermaidFences) {
+		mermaidFences(md);
+	}
+
 	md.block.ruler.before('fence', 'azdown_container', containerRule as RuleBlock, {
 		alt: ['paragraph', 'reference', 'blockquote', 'list']
 	});

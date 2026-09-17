@@ -6,6 +6,17 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Run Extension (sample wiki)",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}/packages/azdown",
+				"${workspaceFolder}/sample/wiki"
+			],
+			"outFiles": ["${workspaceFolder}/packages/azdown/dist/**/*.js"],
+			"preLaunchTask": "build:extension"
+		},
+		{
 			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",

@@ -16,10 +16,11 @@ files already on your disk.
 
 ### Azure DevOps syntax
 
-- **`::: mermaid` diagrams, rendered** — the three-colon form Azure DevOps
-  uses, drawn in the preview and re-themed when you switch between light and
-  dark. A ```` ```mermaid ```` code fence stays a code block, just like in the
-  real wiki.
+- **Mermaid diagrams, rendered** — both forms Azure DevOps documents: the
+  `::: mermaid` container and a ```` ```mermaid ```` fenced block. Drawn in the
+  preview and re-themed when you switch between light and dark. On VS Code 1.121
+  and later, fenced blocks are left to VS Code's own Mermaid support so the two
+  never render the same block twice.
 - **`::: video` and `::: math` containers.**
 - **KaTeX maths** — `$…$` inline and `$$…$$` block, rendered without asking
   your preview to load anything extra. Prices like `$5 and $10` are left alone.

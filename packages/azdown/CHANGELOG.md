@@ -5,36 +5,16 @@ All notable changes to the azdown extension are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
-
-### Fixed
-
-- Tree commands receive the selected page; subpages are created under their
-  parent. Tree items retain stable identities and support Windows paths.
-- Wiki links encode literal percent signs and other URL characters. Cached
-  links and attachments reset when their wiki context or target disappears.
-- Tables of contents survive repeated renders, handle skipped heading levels,
-  and link consistently to emoji headings and unique generated anchors.
-- `.order` edits refresh previews, and selected wikis outside the workspace
-  are watched. Invalid roots no longer count as detected wikis.
-- Page creation uses exclusive writes and removes the newly created page if
-  updating `.order` fails. Existing newline styles are preserved.
-- Slow Mermaid renders cannot replace a newer diagram or theme. Unclosed
-  containers inside lists no longer consume content outside the list.
+## [0.1.0] - 2026-09-17
 
 ### Added
 
 - Host and preview regression tests run with `npm test`, without a display or
   a VS Code download.
 
-## [0.1.0] - 2026-09-16
-
-### Added
-
 - Extends VS Code's built-in Markdown preview via `markdown.markdownItPlugins`,
   keeping Ctrl+K V, scroll sync and theme integration.
-- `::: mermaid`, `::: video` and `::: math` three-colon containers. Backtick
-  code fences are left as code blocks, matching Azure DevOps.
+- `::: mermaid`, `::: video` and `::: math` three-colon containers.
 - Mermaid diagrams are rendered in the preview, following the editor theme and
   re-drawing when it changes. A malformed diagram reports its error in place
   without affecting the others on the page.
@@ -68,6 +48,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   removed, instead of showing stale output until the document is edited.
 
 ### Fixed
+
+- ```mermaid fenced blocks render as diagrams. Azure DevOps documents both
+  them and the `::: mermaid` container; treating the fence as ordinary code was
+  wrong, and the README, the sample and a passing test all asserted it. On
+  VS Code 1.121 and later the fenced form is handed to VS Code's own Mermaid
+  support instead, so one block is never claimed by two renderers.
+
+- Mermaid containers use an azdown-specific class so VS Code's built-in
+  Mermaid renderer cannot remove or replace their diagrams.
+- Wiki images use absolute resource URIs, including ordinary relative image
+  links, so navigating within an existing preview does not resolve them
+  against the first page's base URL.
+- Tree commands receive the selected page; subpages are created under their
+  parent. Tree items retain stable identities and support Windows paths.
+- Wiki links encode literal percent signs and other URL characters. Cached
+  links and attachments reset when their wiki context or target disappears.
+- Tables of contents survive repeated renders, handle skipped heading levels,
+  and link consistently to emoji headings and unique generated anchors.
+- `.order` edits refresh previews, and selected wikis outside the workspace
+  are watched. Invalid roots no longer count as detected wikis.
+- Page creation uses exclusive writes and removes the newly created page if
+  updating `.order` fails. Existing newline styles are preserved.
+- Slow Mermaid renders cannot replace a newer diagram or theme. Unclosed
+  containers inside lists no longer consume content outside the list.
 
 - Attachment paths and links between pages were never rewritten in the real
   preview. Both were implemented as markdown-it `core` rules, and VS Code

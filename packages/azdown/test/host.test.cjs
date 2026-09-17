@@ -187,3 +187,56 @@ test('a missing root or a file used as a root is not treated as a wiki', async t
 	await wiki.detect();
 	assert.equal(wiki.root(), undefined);
 });
+
+test('wiki image URLs survive navigation while the preview keeps the first page base', async t => {
+	const f = fixture(t);
+	const wiki = new f.WikiRoot({ appendLine() {} });
+	f.subscriptions.push(wiki);
+	await wiki.detect();
+	const MarkdownIt = require('markdown-it');
+	const { azdown } = require('markdown-it-azdown');
+	const md = new MarkdownIt().use(azdown, { wiki });
+	const originalImage = md.renderer.rules.image;
+	// VS Code turns absolute file URIs into webview resource URLs, but leaves
+	// relative URLs for the browser to resolve against the existing <base>.
+	md.renderer.rules.image = (tokens, idx, options, env, self) => {
+		const token = tokens[idx];
+		const src = token.attrGet('src');
+		if (src && !token.attrGet('data-src')) {
+			token.attrSet('data-src', src);
+			if (src.startsWith('file:')) {
+				const url = new URL(src);
+				token.attrSet('src', `https://file.vscode-resource.test${url.pathname}${url.search}${url.hash}`);
+			}
+		}
+		return originalImage(tokens, idx, options, env, self);
+	};
+	const initialBase = `https://file.vscode-resource.test${f.dir}/Onboarding.md`;
+	for (const name of ['Onboarding.md', 'Section/Page.md', 'Section/Deep/Page.md']) {
+		const documentPath = path.join(f.dir, name);
+		const relative = path.relative(path.dirname(documentPath), path.join(f.dir, '.attachments', 'diagram sample.svg')).split(path.sep).join('/');
+		for (const src of ['/.attachments/diagram%20sample.svg', relative.replace(/ /g, '%20')]) {
+			const tokens = md.parse(`![test](${src})`, {});
+			for (let render = 0; render < 2; render++) {
+				const html = md.renderer.render(tokens, md.options, { currentDocument: { fsPath: documentPath } });
+				const actual = new URL(html.match(/<img src="([^"]+)"/)[1], initialBase);
+				assert.equal(decodeURIComponent(actual.pathname), `${f.dir}/.attachments/diagram sample.svg`);
+				assert.equal(actual.origin, 'https://file.vscode-resource.test');
+			}
+		}
+	}
+});
+
+test('image URIs preserve percent escapes, queries and SVG fragments', async t => {
+	const f = fixture(t);
+	const wiki = new f.WikiRoot({ appendLine() {} });
+	f.subscriptions.push(wiki);
+	await wiki.detect();
+	const documentPath = path.join(f.dir, 'Section/Page.md');
+	const uri = new URL(wiki.imageUri(documentPath, '../.attachments/A%252DB%20image.svg?v=2#icon'));
+	assert.equal(decodeURIComponent(uri.pathname), `${f.dir}/.attachments/A%2DB image.svg`);
+	assert.equal(uri.search, '?v=2');
+	assert.equal(uri.hash, '#icon');
+	assert.equal(wiki.imageUri(path.join(f.dir, '..', 'outside.md'), './image.png'), undefined);
+	assert.equal(wiki.imageUri(documentPath, 'https://example.test/image.png'), undefined);
+});

@@ -242,9 +242,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 	return {
 		extendMarkdownIt(md: MarkdownIt): MarkdownIt {
+			/*
+			 * Azure DevOps renders Mermaid from both ```mermaid fences and
+			 * ::: mermaid containers, so azdown does too -- except that VS Code
+			 * has rendered the fenced form itself since 1.121, by replacing
+			 * markdown-it's `highlight`. Claiming the same fence twice makes the
+			 * two implementations fight over one element, so step aside when the
+			 * built-in is there and take the fences when it is not.
+			 */
+			const builtInMermaid =
+				vscode.extensions.getExtension('vscode.mermaid-markdown-features') !== undefined;
+			log.appendLine(`[extendMarkdownIt] built-in Mermaid: ${builtInMermaid ? 'yes' : 'no'}`);
+
 			// `wiki` is passed as a live object, not a snapshot: extendMarkdownIt
 			// runs once per engine, but the root can change at any time.
-			return md.use(azdown, { wiki });
+			return md.use(azdown, { wiki, mermaidFences: !builtInMermaid });
 		}
 	};
 }

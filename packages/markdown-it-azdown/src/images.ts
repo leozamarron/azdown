@@ -27,7 +27,11 @@ export function imagesPlugin(md: MarkdownIt, wiki: WikiProvider): void {
 				return;
 			}
 			const original = originalAttr(token, 'src');
-			if (!original?.startsWith(ATTACHMENTS_PREFIX)) {
+			if (!original || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(original)) {
+				return;
+			}
+			const attachment = original.startsWith(ATTACHMENTS_PREFIX);
+			if (original.startsWith('/') && !attachment) {
 				return;
 			}
 			token.attrSet('src', original);
@@ -37,13 +41,16 @@ export function imagesPlugin(md: MarkdownIt, wiki: WikiProvider): void {
 				return;
 			}
 
-			// The root is a filesystem path; the source suffix is already a URL.
-			const attachments = `${root.replace(/[\\/]+$/, '')}/.attachments`;
-			const folder = pathToHref(relativePath(dirname(docPath), attachments));
-			token.attrSet('src', `${folder}/${original.slice(ATTACHMENTS_PREFIX.length)}`);
-			// Force VS Code to resolve the new value; it skips any image that
-			// already carries a data-src from a previous render.
-			attrDelete(token, 'data-src');
+			let source = original;
+			if (attachment) {
+				// The root is a filesystem path; the suffix is already a URL.
+				const attachments = `${root.replace(/[\\/]+$/, '')}/.attachments`;
+				const folder = pathToHref(relativePath(dirname(docPath), attachments));
+				source = `${folder}/${original.slice(ATTACHMENTS_PREFIX.length)}`;
+			}
+			// Include ordinary relative images: they also break when the preview
+			// keeps its old <base> after navigating to a page at another depth.
+			token.attrSet('src', wiki.imageUri?.(docPath, source) ?? source);
 		});
 	});
 }

@@ -108,5 +108,5 @@ test('Windows roots and document drive letters can differ in case', () => {
 test('an unclosed container in a list does not consume the following heading', () => {
 	const html = new MarkdownIt().use(azdown).render('- ::: mermaid\n  graph LR\n\n# Outside\n');
 	assert.match(html, /<h1>.*Outside<\/h1>/);
-	assert.doesNotMatch(html.match(/<div class="mermaid"[^>]*>[\s\S]*?<\/div>/)[0], /Outside/);
+	assert.doesNotMatch(html.match(/<pre class="azdown-mermaid"[^>]*>[\s\S]*?<\/pre>/)[0], /Outside/);
 });

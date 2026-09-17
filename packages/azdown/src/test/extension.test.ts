@@ -100,8 +100,20 @@ suite('rendering through the preview pipeline', () => {
 		assert.ok(src, 'no image was rendered');
 		assert.ok(!src.startsWith('/.attachments/'), `attachment path was not rewritten: ${src}`);
 
-		const resolved = path.resolve(wikiRoot(), src);
-		await vscode.workspace.fs.stat(vscode.Uri.file(resolved));
+		const resolved = vscode.Uri.parse(src);
+		assert.strictEqual(resolved.scheme, 'file', 'image must not depend on the preview base URL');
+		await vscode.workspace.fs.stat(resolved);
+	});
+
+	test('attachment paths resolve from nested pages', async () => {
+		const html = await renderPage('Smoke-Tests/Links-And-Attachments.md');
+		const sources = [...html.matchAll(/<img src="([^"]+)"/g)].map(match => match[1]);
+		assert.ok(sources.length >= 3, 'expected PNG, encoded SVG and relative SVG images');
+		for (const src of sources) {
+			const resolved = vscode.Uri.parse(src);
+			assert.strictEqual(resolved.scheme, 'file', 'nested images need absolute resource URIs');
+			await vscode.workspace.fs.stat(resolved);
+		}
 	});
 
 	test('page links resolve to files that exist on disk', async () => {

@@ -29,6 +29,16 @@ export type { WikiProvider, SubpageEntry } from './wiki.js';
 export interface AzdownOptions {
 	/** `::: mermaid` / `::: video` / `::: math` three-colon containers. */
 	containers?: boolean;
+
+	/**
+	 * Render ```mermaid fenced code blocks as diagrams.
+	 *
+	 * Azure DevOps documents this alongside the `:::` container form, so it is
+	 * on by default. Hosts that already render Mermaid fences themselves --
+	 * VS Code has since 1.121 -- should pass `false`, or the same fence gets
+	 * claimed twice.
+	 */
+	mermaidFences?: boolean;
 	/** `[[_TOC_]]` and `[[_TOSP_]]` macros. */
 	toc?: boolean;
 	/** Heading anchors using Azure DevOps's slug algorithm. */
@@ -53,6 +63,7 @@ export interface AzdownOptions {
 
 const defaults: Required<Omit<AzdownOptions, 'wiki'>> = {
 	containers: true,
+	mermaidFences: true,
 	toc: true,
 	headingAnchors: true,
 	math: true,
@@ -83,7 +94,7 @@ export function azdown(md: MarkdownIt, options: AzdownOptions = {}): void {
 	const opts = { ...defaults, ...options };
 
 	if (opts.containers) {
-		containersPlugin(md);
+		containersPlugin(md, { mermaidFences: opts.mermaidFences });
 	}
 
 	if (opts.math) {

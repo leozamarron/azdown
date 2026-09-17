@@ -161,6 +161,17 @@ export class WikiRoot implements WikiProvider {
 		return this.current;
 	}
 
+	/** VS Code converts file: URIs to webview resource URIs in its image rule. */
+	imageUri(documentPath: string, target: string): string | undefined {
+		if (!this.current || !this.within(documentPath)) {
+			return undefined;
+		}
+		// URL resolution preserves encoded spaces, literal percent signs, query
+		// strings and SVG fragments. Uri.file also handles Windows/UNC paths.
+		const resolved = new URL(target, vscode.Uri.file(documentPath).toString());
+		return resolved.protocol === 'file:' ? resolved.href : undefined;
+	}
+
 	/** Children of the page whose file is `documentPath`. Used by `[[_TOSP_]]`. */
 	subpages(documentPath: string): SubpageEntry[] {
 		if (!this.current || !this.within(documentPath)) {

@@ -3,7 +3,7 @@ import mermaid from 'mermaid';
 /*
  * Mermaid rendering for VS Code's built-in Markdown preview.
  *
- * The `::: mermaid` container plugin emits <div class="mermaid">SOURCE</div>;
+ * The plugin emits <pre class="azdown-mermaid">SOURCE</pre>;
  * the diagram has to be drawn here, in the webview, because Mermaid needs a
  * DOM. Loaded through the `markdown.previewScripts` contribution point.
  *
@@ -58,10 +58,10 @@ function configure(theme: Theme): void {
  * every later diagram on the page unrendered.
  */
 async function renderOne(el: HTMLElement, theme: Theme): Promise<void> {
-	if (!el.hasAttribute(SOURCE_ATTR)) {
-		el.setAttribute(SOURCE_ATTR, el.textContent ?? '');
+	const source = el.getAttribute(SOURCE_ATTR);
+	if (source === null) {
+		return;
 	}
-	const source = el.getAttribute(SOURCE_ATTR) ?? '';
 	const stamp = theme + ' ' + source;
 	const isCurrent = (): boolean => el.isConnected &&
 		el.getAttribute(SOURCE_ATTR) === source && themeName() === theme;
@@ -108,7 +108,9 @@ async function renderAll(): Promise<void> {
 			if (theme !== currentTheme) {
 				configure(theme);
 			}
-			const nodes = document.querySelectorAll<HTMLElement>('div.mermaid');
+			// VS Code's built-in Mermaid renderer owns `.mermaid`. Sharing that
+			// class lets it remove our SVGs while our render stamp stays intact.
+			const nodes = document.querySelectorAll<HTMLElement>('.azdown-mermaid');
 			for (const node of nodes) {
 				await renderOne(node, theme);
 			}
@@ -134,14 +136,24 @@ function schedule(): void {
 	}, 60);
 }
 
-configure(themeName());
-void renderAll();
+function start(): void {
+	const body = document.body;
+	if (!body) {
+		document.addEventListener('DOMContentLoaded', start, { once: true });
+		return;
+	}
 
-// Content updates as the user types, and the <body> class changes when the
-// theme switches. Both need a re-render, and both land here.
-new MutationObserver(schedule).observe(document.body, {
-	childList: true,
-	subtree: true,
-	attributes: true,
-	attributeFilter: ['class', SOURCE_ATTR]
-});
+	configure(themeName());
+	void renderAll();
+
+	// Content updates as the user types, and the <body> class changes when the
+	// theme switches. Both need a re-render, and both land here.
+	new MutationObserver(schedule).observe(body, {
+		childList: true,
+		subtree: true,
+		attributes: true,
+		attributeFilter: ['class', SOURCE_ATTR]
+	});
+}
+
+start();

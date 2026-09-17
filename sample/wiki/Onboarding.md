@@ -32,5 +32,5 @@ Azure DevOps style: no `.md`, and absolute paths resolved from the wiki root.
 - [With %2D](/Azure%2DDevOps-Notes)
 - [To a heading](/Build-And-Release#build-and-release)
 - [On this page](#attachment)
-- [Broken, left as written](/Does-Not-Exist)
+- [Intentionally broken — expected failure](/Does-Not-Exist)
 - [External](https://learn.microsoft.com/azure/devops/project/wiki/markdown-guidance)

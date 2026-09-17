@@ -28,7 +28,10 @@ test('slow Mermaid renders are serialized and cannot overwrite new source or the
 	};
 	const document = {
 		body: { classList: { contains: value => value === 'vscode-dark' && theme === 'dark' } },
-		querySelectorAll: () => [element]
+		querySelectorAll: selector => {
+			assert.equal(selector, '.azdown-mermaid');
+			return [element];
+		}
 	};
 	const MutationObserver = class {
 		constructor(callback) { observer = callback; }
@@ -53,4 +56,28 @@ test('slow Mermaid renders are serialized and cannot overwrite new source or the
 	await new Promise(resolve => setImmediate(resolve));
 	assert.equal(element.innerHTML, '<svg>new</svg>');
 	assert.equal(attrs.get('data-azdown-rendered'), 'dark graph LR; B-->C');
+});
+
+test('initialization waits for the body and ignores containers without azdown source', async () => {
+	let onReady;
+	const calls = [];
+	const document = {
+		body: null,
+		addEventListener: (type, listener, options) => {
+			assert.equal(type, 'DOMContentLoaded');
+			assert.equal(options.once, true);
+			onReady = listener;
+		},
+		querySelectorAll: () => [{ getAttribute: () => null }]
+	};
+	const mermaid = { initialize: () => calls.push('init'), render: () => calls.push('render') };
+	const MutationObserver = class { observe() { calls.push('observe'); } };
+	new Function('require', 'document', 'MutationObserver', 'setTimeout', 'clearTimeout', code)(
+		() => mermaid, document, MutationObserver, setTimeout, clearTimeout
+	);
+	assert.deepEqual(calls, []);
+	document.body = { classList: { contains: () => false } };
+	onReady();
+	await new Promise(resolve => setImmediate(resolve));
+	assert.deepEqual(calls, ['init', 'observe']);
 });

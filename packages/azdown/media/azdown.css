@@ -278,14 +278,21 @@ pre > code {
 
 /* --------------------------------------------------------- containers --- */
 
-.mermaid {
+.azdown-mermaid {
+	/* It is a <pre> so that markdown-it accepts it verbatim from `highlight`;
+	   undo the code-block styling the generic rule above would give it. */
+	padding: 0;
+	border: 0;
+	background: none;
+	white-space: normal;
+	font-family: inherit;
 	margin: 0 0 1.5em;
 	text-align: center;
 	/* Until the diagram is drawn the element still holds its source text. */
 	overflow-x: auto;
 }
 
-.mermaid svg {
+.azdown-mermaid svg {
 	max-width: 100%;
 	height: auto;
 }
@@ -294,7 +301,7 @@ pre > code {
  * A diagram Mermaid could not parse. The message is the parser's own, so it
  * needs to read as an error rather than as page content.
  */
-.mermaid[data-azdown-error] {
+.azdown-mermaid[data-azdown-error] {
 	text-align: left;
 	white-space: pre-wrap;
 	padding: 0.75em 1em;
