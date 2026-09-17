@@ -6,7 +6,7 @@ import { defineConfig } from '@vscode/test-cli';
 const here = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
-	files: `${here}out/test/**/*.test.js`,
+	files: `${here}out/test/extension.test.js`,
 	// The tests need a wiki to find. Opening sample/wiki as the workspace gives
 	// root autodetection a .order file to land on, and gives the tree real
 	// pages to list, instead of asserting against an empty window.

@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- ```mermaid fenced blocks render as diagrams. Azure DevOps documents both
+  them and the `::: mermaid` container; treating the fence as ordinary code was
+  wrong, and the README, the sample and a passing test all asserted it. On
+  VS Code 1.121 and later the fenced form is handed to VS Code's own Mermaid
+  support instead, so one block is never claimed by two renderers.
+
+- Mermaid containers use an azdown-specific class so VS Code's built-in
+  Mermaid renderer cannot remove or replace their diagrams.
+- Wiki images use absolute resource URIs, including ordinary relative image
+  links, so navigating within an existing preview does not resolve them
+  against the first page's base URL.
 - Tree commands receive the selected page; subpages are created under their
   parent. Tree items retain stable identities and support Windows paths.
 - Wiki links encode literal percent signs and other URL characters. Cached

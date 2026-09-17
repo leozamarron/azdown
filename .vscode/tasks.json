@@ -1,11 +1,19 @@
 // See https://go.microsoft.com/fwlink/?LinkId=733558
 // for the documentation about the tasks.json format
 //
-// The npm scripts live in packages/azdown, not at the workspace root, so
-// every npm task carries a "path" to run inside that package.
+// The release-check launch builds both packages from the repository root.
+// Watch tasks run inside packages/azdown.
 {
 	"version": "2.0.0",
 	"tasks": [
+		{
+			"label": "build:extension",
+			"type": "shell",
+			"command": "npm run compile",
+			"options": { "cwd": "${workspaceFolder}" },
+			"problemMatcher": "$tsc",
+			"group": "build"
+		},
 		{
 			"label": "watch",
 			"dependsOn": [

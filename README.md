@@ -41,7 +41,12 @@ npm test             # parser, host and preview unit tests; no display needed
 npm run lint
 ```
 
-Press <kbd>F5</kbd> to launch the Extension Development Host, then:
+For a guided check, select **Run Extension (sample wiki)** in Run and Debug,
+then press <kbd>F5</kbd>. It compiles both packages and opens the sample wiki
+in an Extension Development Host. Start with `Smoke-Tests.md` and follow the
+[manual testing guide](sample/README.md).
+
+The original **Run Extension** configuration opens the entire repository:
 
 - open `sample/azdown-showcase.md` and preview it to eyeball syntax fidelity;
 - open the **Azure DevOps Wiki** panel in the activity bar, point it at

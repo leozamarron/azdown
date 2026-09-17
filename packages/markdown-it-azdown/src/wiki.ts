@@ -29,6 +29,13 @@ export interface WikiProvider {
 	 * links untouched.
 	 */
 	resolveLink?(documentPath: string, target: string): string | undefined;
+
+	/**
+	 * Turn a document-relative image URL into an absolute resource URI.
+	 * Preview hosts can retain the first page's base URL while navigating, so
+	 * local images must not depend on that base. Non-editor hosts may omit this.
+	 */
+	imageUri?(documentPath: string, target: string): string | undefined;
 }
 
 export interface SubpageEntry {

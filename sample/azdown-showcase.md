@@ -40,13 +40,20 @@ graph LR
   A --> --> B[[[
 :::
 
-### A code fence is NOT a container
+### A fenced block is the other documented form
 
-This has to stay a code block, not a diagram:
+Azure DevOps documents both `::: mermaid` and a fenced block with the `mermaid`
+language identifier, so this should draw a diagram too:
 
 ```mermaid
 graph LR
   A --> B
+```
+
+A fence in any other language stays code:
+
+```js
+const x = 1;
 ```
 
 ### Video
